@@ -59,8 +59,14 @@ var sprint;
         break
       default:
         var selectorLength = selector.length
-        this.dom = selectorLength ? selector : [selector]
-        this.domLength = selectorLength || 1
+        if (selectorLength === 0) {
+          this.dom = selector
+          this.domLength = selectorLength
+        }
+        else {
+          this.dom = selectorLength ? selector : [selector]
+          this.domLength = selectorLength || 1
+        }
     }
   }
 
@@ -221,6 +227,22 @@ var sprint;
       var el = element || this.get(0)
       return el[matchSelector](selector)
     },
+    next: function(selector) {
+      var dom = []
+      if (selector === undefined) {
+        this.each(function() {
+          dom.push(this.nextElementSibling)
+        })
+      }
+      else {
+        var self = this
+        this.each(function() {
+          var next = this.nextElementSibling
+          self.is(selector, next) && dom.push(next)
+        })
+      }
+      return sprint(dom)
+    },
     off: function(type, callback) {
       switch (arguments.length) {
         case 0:
@@ -316,8 +338,21 @@ var sprint;
       this.updateClass("toggle", name)
       return this
     },
-    wrap: function() {
-    
+    wrap: function(element) {
+      // single element
+      if (element.match(/</g).length < 3) {
+        /*var div = document.createElement("div")
+        var p = document.querySelector("p")
+        var parent = p.parentNode
+        var next = p.nextSibling
+        div.appendChild(p)
+        parent.insertBefore(div, next)*/
+      }
+      // nested elements
+      else {
+        // use my this.children method to find the most inner element
+        // use my before() and next() methods
+      }
     },
 
     // undocumented, mostly for internal use
