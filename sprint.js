@@ -88,7 +88,9 @@ var Sprint;
           content = [content]
         }
         this.each(function() {
-          for (var i=0, l=content.length; i<l; i++) {
+          var i = -1
+          var l = content.length
+          while (++i < l) {
             this.insertAdjacentHTML("beforeend", content[i].outerHTML)
           }
         })
@@ -99,8 +101,10 @@ var Sprint;
       var dom = []
       var node = this.get(0)
       var parentNodes = selectElements(selector)
+      var i = -1
+      var l = parentNodes.length
 
-      for (var i=0, l=parentNodes.length; i<l; i++) {
+      while (++i < l) {
         var cloned = node.cloneNode(true)
         dom.push(cloned)
         parentNodes[i].appendChild(cloned)
@@ -145,9 +149,9 @@ var Sprint;
           // array: $("div"), [element1, element2], document.getElementsByTagName, etc.
           var contentArray = content instanceof Init ? content.get() : content
           var i = -1
-          var contentLength = contentArray.length
+          var l = contentArray.length
 
-          while (++i < contentLength) {
+          while (++i < l) {
             var el = contentArray[i]
             elementsToInsert.push(el) 
             var prt = el.parentNode
@@ -172,7 +176,10 @@ var Sprint;
         var self = this
         this.each(function() {
           var nodes = this.childNodes
-          for (var i=0, l=nodes.length; i<l; i++) {
+          var i = -1
+          var l = nodes.length
+
+          while (++i < l) {
             var node = nodes[i]
             if (node.nodeType == 1 && self.is(selector, node)) {
               dom.push(node)
@@ -183,7 +190,10 @@ var Sprint;
       else
         this.each(function() {
           var nodes = this.childNodes
-          for (var i=0, l=nodes.length; i<l; i++) {
+          var i = -1
+          var l = nodes.length
+
+          while (++i < l) {
             var node = nodes[i]
             node.nodeType == 1 && dom.push(node)
           }
@@ -210,7 +220,10 @@ var Sprint;
     },
     each: function(callback) {
       // callback(index, element) where element == this
-      for (var i=0; i<this.length; i++) {
+      var i = -1
+      var l = this.length
+
+      while (++i < l) {
         var node = this.get(i)
         callback.call(node, i, node) 
       }
@@ -240,7 +253,10 @@ var Sprint;
       var dom = []
       this.each(function() {
         var nodes = this.querySelectorAll(selector)
-        for (var i=0, l=nodes.length; i<l; i++) {
+        var i = -1
+        var l = nodes.length
+
+        while (++i < l) {
           dom.push(nodes.item(i))
         }
       })
