@@ -125,8 +125,46 @@ var Sprint;
         return this
       }
     },
-    before: function() {
-      
+    before: function(content) { 
+      if (typeof content == "string") {
+        if (content[0] != "<") return this
+        this.each(function() {
+          this.insertAdjacentHTML("beforebegin", content)
+        })
+      }
+      else {
+        // content can be a live HTMLCollection. Creating a new static array
+        // in order to avoid the newly insterted nodes to be added to content.
+        var elementsToInsert = []
+
+        if (content.nodeType) {
+          // DOM node: document.createTextNode() or document.createElement()
+          elementsToInsert.push(content)
+        }
+        else {
+          // array: $("div"), [element1, element2], document.getElementsByTagName, etc.
+          var contentArray = content instanceof Init ? content.get() : content
+          var i = -1
+          var contentLength = contentArray.length
+
+          while (++i < contentLength) {
+            var el = contentArray[i]
+            elementsToInsert.push(el) 
+            var prt = el.parentNode
+            if (prt) {
+              prt.removeChild(el)
+            }
+          }
+        }
+
+        this.each(function() {
+          var self = this
+          elementsToInsert.forEach(function(el) {
+            self.parentNode.insertBefore(el.cloneNode(true), self)
+          })
+        })
+      }
+      return this
     },
     children: function(selector) {
       var dom = []
