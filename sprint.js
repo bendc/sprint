@@ -47,22 +47,22 @@ var Sprint;
         else {
           this.dom = selectElements(selector)
         }
-        this.domLength = this.dom.length
+        this.length = this.dom.length
         break
       case "function":
         this.dom = [d]
-        this.domLength = 1
+        this.length = 1
         this.on("DOMContentLoaded", selector) 
         break
       default:
         var selectorLength = selector.length
         if (selectorLength === 0) {
           this.dom = selector
-          this.domLength = selectorLength
+          this.length = selectorLength
         }
         else {
           this.dom = selectorLength ? selector : [selector]
-          this.domLength = selectorLength || 1
+          this.length = selectorLength || 1
         }
     }
   }
@@ -107,7 +107,7 @@ var Sprint;
       }
 
       this.dom = dom
-      this.domLength = dom.length
+      this.length = dom.length
       return this
     },
     attr: function(name, value) {
@@ -172,7 +172,7 @@ var Sprint;
     },
     each: function(callback) {
       // callback(index, element) where element == this
-      for (var i=0; i<this.domLength; i++) {
+      for (var i=0; i<this.length; i++) {
         var node = this.get(i)
         callback.call(node, i, node) 
       }
@@ -185,7 +185,7 @@ var Sprint;
       return this
     },
     eq: function(index) {
-      var dom = index < this.domLength ? [this.get(index)] : []
+      var dom = index < this.length ? [this.get(index)] : []
       return Sprint(dom)
     },
     filter: function(selector) {
