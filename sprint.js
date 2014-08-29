@@ -3,7 +3,7 @@
  * http://sprintjs.com
  */
 
-var sprint;
+var Sprint;
 
 (function() {
   "use strict"
@@ -22,9 +22,6 @@ var sprint;
     if (selector == "body") {
       return [d.body]
     }
-    else if (selector == "head") {
-      return [d.head]
-    }
     // "#id", ".class" or "tagName"
     else if (/^[\#.]?[\w-]+$/.test(selector)) {
       switch (selector[0]) {
@@ -39,7 +36,7 @@ var sprint;
     return d.querySelectorAll(selector)
   }
 
-  function Sprint(selector) {
+  function Init(selector) {
     switch (typeof selector) {
       case "string":
         if (selector[0] == "<") {
@@ -70,7 +67,7 @@ var sprint;
     }
   }
 
-  Sprint.prototype = {
+  Init.prototype = {
     addClass: function(name) {
       this.updateClass("add", name)
       return this
@@ -84,7 +81,7 @@ var sprint;
         }
       }
       else {
-        if (content instanceof Sprint) {
+        if (content instanceof Init) {
           content = content.get()
         }
         else if (!content.length) {
@@ -153,7 +150,7 @@ var sprint;
             node.nodeType == 1 && dom.push(node)
           }
         })
-      return sprint(dom)
+      return Sprint(dom)
     },
     closest: function(selector) {
       var dom = []
@@ -171,7 +168,7 @@ var sprint;
           }
         }
       })
-      return sprint(dom)
+      return Sprint(dom)
     },
     each: function(callback) {
       // callback(index, element) where element == this
@@ -189,7 +186,7 @@ var sprint;
     },
     eq: function(index) {
       var dom = index < this.domLength ? [this.get(index)] : []
-      return sprint(dom)
+      return Sprint(dom)
     },
     filter: function(selector) {
       var dom = []
@@ -199,7 +196,7 @@ var sprint;
           dom.push(this)
         }
       })
-      return sprint(dom)
+      return Sprint(dom)
     },
     find: function(selector) {
       var dom = []
@@ -209,7 +206,7 @@ var sprint;
           dom.push(nodes.item(i))
         }
       })
-      return sprint(dom)
+      return Sprint(dom)
     },
     get: function(index) {
       return index === undefined ? this.dom : this.dom[index]
@@ -241,7 +238,7 @@ var sprint;
           self.is(selector, next) && dom.push(next)
         })
       }
-      return sprint(dom)
+      return Sprint(dom)
     },
     off: function(type, callback) {
       switch (arguments.length) {
@@ -302,7 +299,7 @@ var sprint;
           dom.push(this.parentNode)
         })
       }
-      return sprint(dom)
+      return Sprint(dom)
     },
     removeAttr: function(name) {
       this.each(function() {
@@ -365,9 +362,9 @@ var sprint;
 
   // public
 
-  sprint = function(selector) {
-    return new Sprint(selector)
+  Sprint = function(selector) {
+    return new Init(selector)
   }
 
-  window.$ === undefined && (window.$ = sprint)
+  window.$ === undefined && (window.$ = Sprint)
 })();
