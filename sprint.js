@@ -59,15 +59,18 @@ var Sprint;
         // array: $("div"), [element1, element2], document.getElementsByTagName, etc.
         var contentArray = content instanceof Init ? content.get() : content
         var i = -1
+        var initialLength = contentArray.length
 
-        // contentArray.length can't be cached as it'll change if removeChild() is called
+        // contentArray.length can't be cached as it'll change if
+        // removeChild() is called on a live HTMLCollection.
         while (++i < contentArray.length) {
           var el = contentArray[i]
           elementsToInsert.push(el) 
+
           var prt = el.parentNode
           if (prt) {
             prt.removeChild(el)
-            i--
+            contentArray.length < initialLength && i--
           }
         }
       }
@@ -75,7 +78,6 @@ var Sprint;
       this.each(function() {
         var self = this
         elementsToInsert.forEach(function(el) {
-          //self.parentNode.insertBefore(el.cloneNode(true), self)
           self.insertAdjacentHTML(position, el.outerHTML)
         })
       })
