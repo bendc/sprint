@@ -9,14 +9,17 @@ var Sprint;
   "use strict"
 
   var d = document
-  var matchSelector;
-
-  ["m", "webkitM", "msM", "mozM"].forEach(function(prefix) {
-    var name = prefix + "atchesSelector"
-    if (!matchSelector && Element.prototype[name]) {
-      matchSelector = name
+  var matchSelector = (function() {
+    var prefixes = ["m", "webkitM", "msM", "mozM"]
+    var i = -1
+    var l = prefixes.length
+    while (++i < l) {
+      var name = prefixes[i] + "atchesSelector"
+      if (Element.prototype[name]) {
+        return name
+      }
     }
-  })
+  })()
 
   function selectElements(selector) {
     if (selector == "body") {
@@ -34,6 +37,49 @@ var Sprint;
       }
     }
     return d.querySelectorAll(selector)
+  }
+
+  function insertHTML(position, content) {
+    if (typeof content == "string") {
+      if (content[0] != "<") return this
+      this.each(function() {
+        this.insertAdjacentHTML(position, content)
+      })
+    }
+    else {
+      // content can be a live HTMLCollection. Creating a new static array
+      // in order to avoid the newly insterted nodes to be added to content.
+      var elementsToInsert = []
+
+      if (content.nodeType) {
+        // DOM node: document.createTextNode() or document.createElement()
+        elementsToInsert.push(content)
+      }
+      else {
+        // array: $("div"), [element1, element2], document.getElementsByTagName, etc.
+        var contentArray = content instanceof Init ? content.get() : content
+        var i = -1
+
+        // contentArray.length can't be cached as it'll change if removeChild() is called
+        while (++i < contentArray.length) {
+          var el = contentArray[i]
+          elementsToInsert.push(el) 
+          var prt = el.parentNode
+          if (prt) {
+            prt.removeChild(el)
+            i--
+          }
+        }
+      }
+
+      this.each(function() {
+        var self = this
+        elementsToInsert.forEach(function(el) {
+          //self.parentNode.insertBefore(el.cloneNode(true), self)
+          self.insertAdjacentHTML(position, el.outerHTML)
+        })
+      })
+    }
   }
 
   function Init(selector) {
@@ -73,28 +119,7 @@ var Sprint;
       return this
     },
     append: function(content) {
-      if (typeof content == "string") {
-        if (content[0] == "<") {
-          this.each(function() {
-            this.insertAdjacentHTML("beforeend", content)
-          })
-        }
-      }
-      else {
-        if (content instanceof Init) {
-          content = content.get()
-        }
-        else if (!content.length) {
-          content = [content]
-        }
-        this.each(function() {
-          var i = -1
-          var l = content.length
-          while (++i < l) {
-            this.insertAdjacentHTML("beforeend", content[i].outerHTML)
-          }
-        })
-      }
+      insertHTML.call(this, "beforeend", content)
       return this
     },
     appendTo: function(selector) {
@@ -130,44 +155,7 @@ var Sprint;
       }
     },
     before: function(content) { 
-      if (typeof content == "string") {
-        if (content[0] != "<") return this
-        this.each(function() {
-          this.insertAdjacentHTML("beforebegin", content)
-        })
-      }
-      else {
-        // content can be a live HTMLCollection. Creating a new static array
-        // in order to avoid the newly insterted nodes to be added to content.
-        var elementsToInsert = []
-
-        if (content.nodeType) {
-          // DOM node: document.createTextNode() or document.createElement()
-          elementsToInsert.push(content)
-        }
-        else {
-          // array: $("div"), [element1, element2], document.getElementsByTagName, etc.
-          var contentArray = content instanceof Init ? content.get() : content
-          var i = -1
-          var l = contentArray.length
-
-          while (++i < l) {
-            var el = contentArray[i]
-            elementsToInsert.push(el) 
-            var prt = el.parentNode
-            if (prt) {
-              prt.removeChild(el)
-            }
-          }
-        }
-
-        this.each(function() {
-          var self = this
-          elementsToInsert.forEach(function(el) {
-            self.parentNode.insertBefore(el.cloneNode(true), self)
-          })
-        })
-      }
+      insertHTML.call(this, "beforebegin", content)
       return this
     },
     children: function(selector) {
