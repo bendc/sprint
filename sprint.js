@@ -75,10 +75,30 @@ var Sprint;
         }
       }
 
+      var methods = {
+        beforeend: function(clone) {
+          this.appendChild(clone) 
+        },
+        beforebegin: function(clone) {
+          this.parentNode.insertBefore(clone, this) 
+        }
+      }
+
       this.each(function() {
         var self = this
         elementsToInsert.forEach(function(el) {
-          self.insertAdjacentHTML(position, el.outerHTML)
+          var clone = el.cloneNode(true)
+          methods[position].call(self, clone)
+          el.sprintEventListeners && duplicateEventListeners(el, clone)
+        })
+      })
+    }
+
+    function duplicateEventListeners(el, clone) {
+      var $clone = Sprint(clone)              
+      Object.keys(el.sprintEventListeners).forEach(function(key) {
+        el.sprintEventListeners[key].forEach(function(callback) {
+          $clone.on(key, callback)
         })
       })
     }
