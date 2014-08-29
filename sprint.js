@@ -244,6 +244,7 @@ var Sprint;
       switch (arguments.length) {
         case 0:
           this.each(function(i, el) {
+            if (!this.sprintEventListeners) return
             Object.keys(this.sprintEventListeners).forEach(function(key) {
               el.sprintEventListeners[key].forEach(function(callbackReference) {
                 el.removeEventListener(key, callbackReference) 
@@ -254,6 +255,7 @@ var Sprint;
           break
         case 1:
           this.each(function(i, el) {
+            if (!this.sprintEventListeners) return
             this.sprintEventListeners[type].forEach(function(callbackReference) {
               el.removeEventListener(type, callbackReference) 
             }) 
@@ -262,6 +264,7 @@ var Sprint;
           break
         case 2:
           this.each(function() {
+            if (!this.sprintEventListeners) return
             var updatedSprintEventListeners = []
             this.sprintEventListeners[type].forEach(function(callbackReference) {
               callback != callbackReference && updatedSprintEventListeners.push(callbackReference)
