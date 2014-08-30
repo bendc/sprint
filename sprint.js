@@ -41,7 +41,6 @@ var Sprint;
 
   function insertHTML(position, content) {
     if (typeof content == "string") {
-      if (content[0] != "<") return this
       this.each(function() {
         this.insertAdjacentHTML(position, content)
       })
