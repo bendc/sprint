@@ -74,6 +74,7 @@ var Sprint;
         }
       }
 
+      var clonedElements = []
       var methods = {
         beforeend: function(clone) {
           this.appendChild(clone) 
@@ -89,8 +90,11 @@ var Sprint;
           var clone = el.cloneNode(true)
           methods[position].call(self, clone)
           el.sprintEventListeners && duplicateEventListeners(el, clone)
+          clonedElements.push(clone)
         })
       })
+
+      return clonedElements
     }
 
     function duplicateEventListeners(el, clone) {
@@ -144,21 +148,7 @@ var Sprint;
       return this
     },
     appendTo: function(selector) {
-      var dom = []
-      var node = this.get(0)
-      var parentNodes = selectElements(selector)
-      var i = -1
-      var l = parentNodes.length
-
-      while (++i < l) {
-        var cloned = node.cloneNode(true)
-        dom.push(cloned)
-        parentNodes[i].appendChild(cloned)
-      }
-
-      this.dom = dom
-      this.length = dom.length
-      return this
+      return Sprint(insertHTML.call(Sprint(selector), "beforeend", this))
     },
     attr: function(name, value) {
       if (value === undefined) {
