@@ -394,18 +394,21 @@ var Sprint;
     wrap: function(element) {
       // single element
       if (element.match(/</g).length < 3) {
-        /*var div = document.createElement("div")
-        var p = document.querySelector("p")
-        var parent = p.parentNode
-        var next = p.nextSibling
-        div.appendChild(p)
-        parent.insertBefore(div, next)*/
+        this.each(function() {
+          var wrappingElement = Sprint(element).get(0)
+          var prt = this.parentNode
+          var next = this.nextSibling
+
+          wrappingElement.appendChild(this)
+          prt.insertBefore(wrappingElement, next)
+        })
       }
       // nested elements
       else {
         // use my this.children method to find the most inner element
         // use my before() and next() methods
       }
+      return this
     },
 
     // undocumented, mostly for internal use
