@@ -39,6 +39,16 @@ var Sprint;
     return d.querySelectorAll(selector)
   }
 
+  function duplicateEventListeners(el, clone) {
+    if (!el.sprintEventListeners) return
+    var $clone = Sprint(clone)              
+    Object.keys(el.sprintEventListeners).forEach(function(key) {
+      el.sprintEventListeners[key].forEach(function(callback) {
+        $clone.on(key, callback)
+      })
+    })
+  }
+
   function insertHTML(position, content) {
     if (typeof content == "string") {
       this.each(function() {
@@ -51,8 +61,10 @@ var Sprint;
       var elementsToInsert = []
 
       if (content.nodeType) {
-        // DOM node: document.createTextNode() or document.createElement()
+        // DOM node: single existing DOM node, createTextNode() or createElement()
         elementsToInsert.push(content)
+        var prt = content.parentNode
+        prt && prt.removeChild(content)
       }
       else {
         // array: $("div"), [element1, element2], document.getElementsByTagName, etc.
@@ -89,21 +101,12 @@ var Sprint;
         elementsToInsert.forEach(function(el) {
           var clone = el.cloneNode(true)
           methods[position].call(self, clone)
-          el.sprintEventListeners && duplicateEventListeners(el, clone)
+          duplicateEventListeners(el, clone)
           clonedElements.push(clone)
         })
       })
 
       return clonedElements
-    }
-
-    function duplicateEventListeners(el, clone) {
-      var $clone = Sprint(clone)              
-      Object.keys(el.sprintEventListeners).forEach(function(key) {
-        el.sprintEventListeners[key].forEach(function(callback) {
-          $clone.on(key, callback)
-        })
-      })
     }
   }
 
@@ -392,22 +395,28 @@ var Sprint;
       return this
     },
     wrap: function(element) {
-      // single element
-      if (element.match(/</g).length < 3) {
-        this.each(function() {
-          var wrappingElement = Sprint(element).get(0)
-          var prt = this.parentNode
-          var next = this.nextSibling
-
-          wrappingElement.appendChild(this)
-          prt.insertBefore(wrappingElement, next)
-        })
+      // single element (HTML string or DOM element)
+      if ((typeof element == "string" && (element.match(/</g) || []).length < 3) || element.nodeType) {
+        element = Sprint(element)
       }
       // nested elements
       else {
         // use my this.children method to find the most inner element
         // use my before() and next() methods
       }
+
+      var wrappingElement = element.get(0)
+
+      this.each(function() {
+        var clone = wrappingElement.cloneNode(true)
+        var prt = this.parentNode
+        var next = this.nextSibling
+
+        duplicateEventListeners(wrappingElement, clone)
+        clone.appendChild(this)
+        prt.insertBefore(clone, next)
+      })
+
       return this
     },
 
