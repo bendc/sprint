@@ -22,18 +22,22 @@ var Sprint;
   })()
 
   function selectElements(selector) {
-    if (selector == "body") {
-      return [d.body]
-    }
-    // "#id", ".class" or "tagName"
-    else if (/^[\#.]?[\w-]+$/.test(selector)) {
+    // #id, .class or tagName
+    if (/^[\#.]?[\w-]+$/.test(selector)) {
       switch (selector[0]) {
-        case "#":
-          return [d.getElementById(selector.slice(1))]
         case ".":
           return d.getElementsByClassName(selector.slice(1))
+        case "#":
+          return [d.getElementById(selector.slice(1))]
         default:
-          return d.getElementsByTagName(selector)
+          switch (selector) {
+            case "body":
+              return [d.body]
+            case d:
+              return [d]
+            default:
+              return d.getElementsByTagName(selector)
+          }
       }
     }
     return d.querySelectorAll(selector)
