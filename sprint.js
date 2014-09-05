@@ -302,6 +302,7 @@ var Sprint;
     },
     off: function(type, callback) {
       switch (arguments.length) {
+        // .off()
         case 0:
           this.each(function(i, el) {
             if (!this.sprintEventListeners) return
@@ -310,18 +311,22 @@ var Sprint;
                 el.removeEventListener(key, callbackReference) 
               })
             }) 
+            this.sprintEventListeners = {}
           })
-          this.sprintEventListeners = {}
           break
+
+        // .off("click")
         case 1:
           this.each(function(i, el) {
             if (!this.sprintEventListeners) return
             this.sprintEventListeners[type].forEach(function(callbackReference) {
               el.removeEventListener(type, callbackReference) 
             }) 
-            delete this.sprintEventListeners[type]
+            this.sprintEventListeners[type] = []
           })
           break
+
+        // .off("click", handler)
         case 2:
           this.each(function() {
             if (!this.sprintEventListeners) return
