@@ -21,6 +21,17 @@ var Sprint;
     }
   })()
 
+  function selectByTag(tagName) {
+    switch (tagName) {
+      case "body":
+        return [d.body]
+      case d:
+        return [d]
+      default:
+        return d.getElementsByTagName(tagName)
+    }
+  }
+
   function selectElements(selector) {
     // #id, .class or tagName
     if (/^[\#.]?[\w-]+$/.test(selector)) {
@@ -30,14 +41,7 @@ var Sprint;
         case "#":
           return [d.getElementById(selector.slice(1))]
         default:
-          switch (selector) {
-            case "body":
-              return [d.body]
-            case d:
-              return [d]
-            default:
-              return d.getElementsByTagName(selector)
-          }
+          return selectByTag(selector)
       }
     }
     return d.querySelectorAll(selector)
