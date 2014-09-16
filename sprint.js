@@ -408,30 +408,70 @@ var Sprint;
       return this
     },
     wrap: function(element) {
-      // single element (HTML string or DOM element)
-      if ((typeof element == "string" && (element.match(/</g) || []).length < 3) || element.nodeType) {
-        element = Sprint(element)
-      }
-      // nested elements
-      else {
-        // use my this.children method to find the most inner element
-        // use my before() and next() methods
-      }
-
-      var wrappingElement = element.get(0)
-
+      var outerWrap = Sprint(element).get(0)
+      var nestedElements =
+        ((typeof element == "string" && (element.match(/</g) || []).length < 3) || element.nodeType)
+          ? false
+          : true
+  
       this.each(function() {
-        var clone = wrappingElement.cloneNode(true)
+        var clone = outerWrap.cloneNode(true)
         var prt = this.parentNode
         var next = this.nextSibling
 
-        duplicateEventListeners(wrappingElement, clone)
-        clone.appendChild(this)
+        if (nestedElements) {
+          // find most inner child
+          var innerWrap = clone.firstChild
+          while (innerWrap.firstChild) innerWrap = innerWrap.firstChild
+          innerWrap.appendChild(this)
+        }
+        else {
+          duplicateEventListeners(outerWrap, clone)
+          clone.appendChild(this)
+        }
+
         prt.insertBefore(clone, next)
       })
 
       return this
     },
+
+    /* 33 lines
+    wrap: function(element) {
+      var outerWrap = Sprint(element).get(0)
+
+      // single element (HTML string or DOM element)
+      if ((typeof element == "string" && (element.match(/</g) || []).length < 3) || element.nodeType) {
+        this.each(function() {
+          var clone = outerWrap.cloneNode(true)
+          var prt = this.parentNode
+          var next = this.nextSibling
+
+          duplicateEventListeners(outerWrap, clone)
+          clone.appendChild(this)
+          prt.insertBefore(clone, next)
+        })
+      }
+
+      // nested elements
+      else {
+        this.each(function() {
+          var clone = outerWrap.cloneNode(true)
+          var prt = this.parentNode
+          var next = this.nextSibling
+
+          // find most inner child
+          var innerWrap = clone.firstChild
+          while (innerWrap.firstChild) innerWrap = innerWrap.firstChild
+
+          innerWrap.appendChild(this)
+          prt.insertBefore(clone, next)
+        })
+      }
+
+      return this
+    },
+    */
 
     // undocumented, mostly for internal use
     updateClass: function(method, name) {
