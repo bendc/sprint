@@ -21,6 +21,16 @@ var Sprint;
     }
   })()
 
+  function convertDomToArray(sprintObj) {
+    var currentDom = sprintObj.get()
+    if (currentDom instanceof Array) return
+    var newDom = [].map.call(currentDom, function(el) {
+      return el
+    })
+    sprintObj.dom = newDom
+    sprintObj.length = newDom.length
+  }
+
   function selectByTag(tagName) {
     switch (tagName) {
       case "body":
@@ -65,7 +75,7 @@ var Sprint;
     }
     else {
       // content can be a live HTMLCollection. Creating a new static array
-      // in order to avoid the newly insterted nodes to be added to content.
+      // in order to avoid the newly inserted nodes to be added to content.
       var elementsToInsert = []
 
       if (content.nodeType) {
@@ -408,12 +418,11 @@ var Sprint;
       return this
     },
     wrap: function(element) {
+      convertDomToArray(this)
+
       var outerWrap = Sprint(element).get(0)
-      var nestedElements =
-        ((typeof element == "string" && (element.match(/</g) || []).length < 3) || element.nodeType)
-          ? false
-          : true
-  
+      var nestedElements = typeof element == "string" && element.match(/</g).length > 2
+
       this.each(function() {
         var clone = outerWrap.cloneNode(true)
         var prt = this.parentNode
@@ -435,43 +444,6 @@ var Sprint;
 
       return this
     },
-
-    /* 33 lines
-    wrap: function(element) {
-      var outerWrap = Sprint(element).get(0)
-
-      // single element (HTML string or DOM element)
-      if ((typeof element == "string" && (element.match(/</g) || []).length < 3) || element.nodeType) {
-        this.each(function() {
-          var clone = outerWrap.cloneNode(true)
-          var prt = this.parentNode
-          var next = this.nextSibling
-
-          duplicateEventListeners(outerWrap, clone)
-          clone.appendChild(this)
-          prt.insertBefore(clone, next)
-        })
-      }
-
-      // nested elements
-      else {
-        this.each(function() {
-          var clone = outerWrap.cloneNode(true)
-          var prt = this.parentNode
-          var next = this.nextSibling
-
-          // find most inner child
-          var innerWrap = clone.firstChild
-          while (innerWrap.firstChild) innerWrap = innerWrap.firstChild
-
-          innerWrap.appendChild(this)
-          prt.insertBefore(clone, next)
-        })
-      }
-
-      return this
-    },
-    */
 
     // undocumented, mostly for internal use
     updateClass: function(method, name) {
