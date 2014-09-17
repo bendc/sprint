@@ -21,14 +21,16 @@ var Sprint;
     }
   })()
 
-  function convertDomToArray(sprintObj) {
-    var currentDom = sprintObj.get()
-    if (currentDom instanceof Array) return
-    var newDom = [].map.call(currentDom, function(el) {
+  function toArray(collection) {
+    if (collection instanceof Array) return
+    return [].map.call(collection, function(el) {
       return el
     })
-    sprintObj.dom = newDom
-    sprintObj.length = newDom.length
+  }
+
+  function updateDom(newDom) {
+    this.dom = newDom
+    this.length = newDom.length
   }
 
   function selectByTag(tagName) {
@@ -43,7 +45,7 @@ var Sprint;
   }
 
   function selectElements(selector) {
-    // #id, .class or tagName
+    // .class, #id or tagName
     if (/^[\#.]?[\w-]+$/.test(selector)) {
       switch (selector[0]) {
         case ".":
@@ -74,35 +76,11 @@ var Sprint;
       })
     }
     else {
-      // content can be a live HTMLCollection. Creating a new static array
-      // in order to avoid the newly inserted nodes to be added to content.
-      var elementsToInsert = []
-
-      if (content.nodeType) {
+      var elementsToInsert = content.nodeType
         // DOM node: single existing DOM node, createTextNode() or createElement()
-        elementsToInsert.push(content)
-        var prt = content.parentNode
-        prt && prt.removeChild(content)
-      }
-      else {
-        // array: $("div"), [element1, element2], document.getElementsByTagName, etc.
-        var contentArray = content instanceof Init ? content.get() : content
-        var i = -1
-        var initialLength = contentArray.length
-
-        // contentArray.length can't be cached as it'll change if
-        // removeChild() is called on a live HTMLCollection.
-        while (++i < contentArray.length) {
-          var el = contentArray[i]
-          elementsToInsert.push(el) 
-
-          var prt = el.parentNode
-          if (prt) {
-            prt.removeChild(el)
-            contentArray.length < initialLength && i--
-          }
-        }
-      }
+        ? [content]
+        // collection: $("div"), [element1, element2], document.getElementsByTagName, etc.
+        : toArray(content instanceof Init ? content.get() : content)
 
       var clonedElements = []
       var methods = {
@@ -114,13 +92,17 @@ var Sprint;
         }
       }
 
-      this.each(function() {
+      this.each(function(index) {
         var self = this
         elementsToInsert.forEach(function(el) {
           var clone = el.cloneNode(true)
           methods[position].call(self, clone)
           duplicateEventListeners(el, clone)
           clonedElements.push(clone)
+
+          if (index > 0) return
+          var prt = el.parentNode
+          if (prt) prt.removeChild(el)
         })
       })
 
@@ -418,7 +400,7 @@ var Sprint;
       return this
     },
     wrap: function(element) {
-      convertDomToArray(this)
+      updateDom.call(this, toArray(this.get()))
 
       var outerWrap = Sprint(element).get(0)
       var nestedElements = typeof element == "string" && element.match(/</g).length > 2
