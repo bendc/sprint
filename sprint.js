@@ -431,7 +431,7 @@ var Sprint;
         }
       }
 
-      this.each(callback)
+      this.each(eachCallback)
       return this
     },
 
