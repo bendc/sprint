@@ -22,7 +22,7 @@ var Sprint;
   })()
 
   function toArray(collection) {
-    if (collection instanceof Array) return
+    if (collection instanceof Array) return collection
     return [].map.call(collection, function(el) {
       return el
     })
@@ -400,30 +400,38 @@ var Sprint;
       return this
     },
     wrap: function(element) {
-      updateDom.call(this, toArray(this.get()))
+      var eachCallback
 
-      var outerWrap = Sprint(element).get(0)
-      var nestedElements = typeof element == "string" && element.match(/</g).length > 2
-
-      this.each(function() {
-        var clone = outerWrap.cloneNode(true)
-        var prt = this.parentNode
-        var next = this.nextSibling
-
-        if (nestedElements) {
-          // find most inner child
-          var innerWrap = clone.firstChild
-          while (innerWrap.firstChild) innerWrap = innerWrap.firstChild
-          innerWrap.appendChild(this)
+      if (typeof element == "function") {
+        eachCallback = function() {
+          Sprint(this).wrap(element.call(this))
         }
-        else {
-          duplicateEventListeners(outerWrap, clone)
-          clone.appendChild(this)
+      }
+      else {
+        updateDom.call(this, toArray(this.get()))
+
+        var outerWrap = Sprint(element).get(0)
+        var nestedElements = typeof element == "string" && element.match(/</g).length > 2
+
+        eachCallback = function() {
+          var clone = outerWrap.cloneNode(true)
+          var prt = this.parentNode
+          var next = this.nextSibling
+          if (nestedElements) {
+            // find most inner child
+            var innerWrap = clone.firstChild
+            while (innerWrap.firstChild) innerWrap = innerWrap.firstChild
+            innerWrap.appendChild(this)
+          }
+          else {
+            duplicateEventListeners(outerWrap, clone)
+            clone.appendChild(this)
+          }
+          prt.insertBefore(clone, next)
         }
+      }
 
-        prt.insertBefore(clone, next)
-      })
-
+      this.each(callback)
       return this
     },
 
