@@ -21,16 +21,17 @@ var Sprint;
     }
   })()
 
-  function toArray(collection) {
-    if (collection instanceof Array) return collection
-    return [].map.call(collection, function(el) {
+  function toArray(obj) {
+    // Converts array-like objects to actual arrays.
+    // If obj is a Sprint object, the DOM reference gets updated.
+
+    if (obj instanceof Array) return obj
+    var isSprintObj = obj instanceof Init
+    var dom = [].map.call(isSprintObj ? obj.get() : obj, function(el) {
       return el
     })
-  }
-
-  function updateDom(newDom) {
-    this.dom = newDom
-    this.length = newDom.length
+    isSprintObj && (obj.dom = dom)
+    return dom
   }
 
   function selectByTag(tagName) {
@@ -76,12 +77,10 @@ var Sprint;
       })
     }
     else {
-      var elementsToInsert = content.nodeType
-        // DOM node: single existing DOM node, createTextNode() or createElement()
-        ? [content]
-        // collection: $("div"), [element1, element2], document.getElementsByTagName, etc.
-        : toArray(content instanceof Init ? content.get() : content)
+      // DOM node: single existing DOM node, createTextNode() or createElement()
+      // Or collection: $("div"), [element1, element2], document.getElementsByTagName, etc.
 
+      var elementsToInsert = content.nodeType ? [content] : toArray(content)
       var clonedElements = []
       var methods = {
         beforeend: function(clone) {
@@ -400,20 +399,19 @@ var Sprint;
       return this
     },
     wrap: function(element) {
-      var eachCallback
-
       if (typeof element == "function") {
-        eachCallback = function() {
+        this.each(function() {
           Sprint(this).wrap(element.call(this))
-        }
+        })
       }
       else {
-        updateDom.call(this, toArray(this.get()))
+        toArray(this)
 
-        var outerWrap = Sprint(element).get(0)
+        var sprintElement = element instanceof Init ? element : Sprint(element)
+        var outerWrap = sprintElement.get(0)
         var nestedElements = typeof element == "string" && element.match(/</g).length > 2
 
-        eachCallback = function() {
+        this.each(function() {
           var clone = outerWrap.cloneNode(true)
           var prt = this.parentNode
           var next = this.nextSibling
@@ -428,10 +426,9 @@ var Sprint;
             clone.appendChild(this)
           }
           prt.insertBefore(clone, next)
-        }
+        })
       }
 
-      this.each(eachCallback)
       return this
     },
 
