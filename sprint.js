@@ -1,8 +1,3 @@
-/*
- * Sprint JavaScript Library v1.0.0
- * http://sprintjs.com
- */
-
 var Sprint;
 
 (function() {
@@ -91,7 +86,10 @@ var Sprint;
         }
       }
 
+      var isSprintObj = content instanceof Init
+
       this.each(function(index) {
+
         var self = this
         elementsToInsert.forEach(function(el) {
           var clone = el.cloneNode(true)
@@ -105,6 +103,7 @@ var Sprint;
         })
       })
 
+      if (isSprintObj) content.dom = clonedElements
       return clonedElements
     }
   }
@@ -150,7 +149,8 @@ var Sprint;
       return this
     },
     appendTo: function(selector) {
-      return Sprint(insertHTML.call(Sprint(selector), "beforeend", this))
+      selector instanceof Init || (selector = Sprint(selector))
+      return Sprint(insertHTML.call(selector, "beforeend", this))
     },
     attr: function(name, value) {
       if (value === undefined) {
