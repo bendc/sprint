@@ -56,13 +56,26 @@ var Sprint;
   }
 
   function duplicateEventListeners(el, clone) {
-    if (!el.sprintEventListeners) return
-    var $clone = Sprint(clone)              
-    Object.keys(el.sprintEventListeners).forEach(function(key) {
-      el.sprintEventListeners[key].forEach(function(callback) {
-        $clone.on(key, callback)
-      })
-    })
+    var elChildren = el.querySelectorAll("*")
+    var cloneChildren
+    var i = -1
+    var l = elChildren.length + 1
+    elChildren[l-1] = el
+    while (++i < l) {
+      var listeners = elChildren[i].sprintEventListeners
+      if (listeners) {
+        if (!cloneChildren) {
+          cloneChildren = clone.querySelectorAll("*")
+          cloneChildren[l-1] = clone
+        }
+        var sprintCloneChild = Sprint(cloneChildren[i])
+        Object.keys(listeners).forEach(function(key) {
+          listeners[key].forEach(function(callback) {
+            sprintCloneChild.on(key, callback)
+          })
+        })
+      }
+    }
   }
 
   function insertHTML(position, content) {
@@ -86,10 +99,7 @@ var Sprint;
         }
       }
 
-      var isSprintObj = content instanceof Init
-
       this.each(function(index) {
-
         var self = this
         elementsToInsert.forEach(function(el) {
           var clone = el.cloneNode(true)
@@ -103,7 +113,7 @@ var Sprint;
         })
       })
 
-      if (isSprintObj) content.dom = clonedElements
+      if (content instanceof Init) content.dom = clonedElements
       return clonedElements
     }
   }
