@@ -55,13 +55,17 @@ var Sprint;
     return d.querySelectorAll(selector)
   }
 
+  function findDescendants(parent) {
+    return parent.getElementsByTagName("*") 
+  }
+
   function duplicateEventListeners(el, clone) {
     // duplicate event listeners for the parent element
     var listeners = el.sprintEventListeners 
     listeners && addListeners(listeners, clone)
 
     // and its children
-    var elChildren = el.getElementsByTagName("*")
+    var elChildren = findDescendants(el)
     var cloneChildren
     var i = -1
     var l = elChildren.length
@@ -69,8 +73,7 @@ var Sprint;
       var listeners = elChildren[i].sprintEventListeners
       if (listeners) {
         if (!cloneChildren) {
-          cloneChildren = clone.getElementsByTagName("*")
-          cloneChildren[l-1] = clone
+          cloneChildren = findDescendants(clone)
         }
         addListeners(listeners, cloneChildren[i])
       }
