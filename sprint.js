@@ -56,25 +56,33 @@ var Sprint;
   }
 
   function duplicateEventListeners(el, clone) {
-    var elChildren = el.querySelectorAll("*")
+    // duplicate event listeners for the parent element
+    var listeners = el.sprintEventListeners 
+    listeners && addListeners(listeners, clone)
+
+    // and its children
+    var elChildren = el.getElementsByTagName("*")
     var cloneChildren
     var i = -1
-    var l = elChildren.length + 1
-    elChildren[l-1] = el
+    var l = elChildren.length
     while (++i < l) {
       var listeners = elChildren[i].sprintEventListeners
       if (listeners) {
         if (!cloneChildren) {
-          cloneChildren = clone.querySelectorAll("*")
+          cloneChildren = clone.getElementsByTagName("*")
           cloneChildren[l-1] = clone
         }
-        var sprintCloneChild = Sprint(cloneChildren[i])
-        Object.keys(listeners).forEach(function(key) {
-          listeners[key].forEach(function(callback) {
-            sprintCloneChild.on(key, callback)
-          })
-        })
+        addListeners(listeners, cloneChildren[i])
       }
+    }
+
+    function addListeners(originalListeners, clone) {
+      var sprintClone = Sprint(clone)
+      Object.keys(originalListeners).forEach(function(key) {
+        originalListeners[key].forEach(function(callback) {
+          sprintClone.on(key, callback)
+        })
+      })
     }
   }
 
