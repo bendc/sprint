@@ -25,7 +25,7 @@ var Sprint;
     var dom = [].map.call(isSprintObj ? obj.get() : obj, function(el) {
       return el
     })
-    isSprintObj && (obj.dom = dom)
+    if (isSprintObj) obj.dom = dom
     return dom
   }
 
@@ -59,33 +59,35 @@ var Sprint;
     return parent.getElementsByTagName("*") 
   }
 
+  function addEventListeners(listeners, el) {
+    var sprintClone = Sprint(el)
+    Object.keys(listeners).forEach(function(key) {
+      listeners[key].forEach(function(callback) {
+        sprintClone.on(key, callback)
+      })
+    })
+  }
+
   function duplicateEventListeners(el, clone) {
     // duplicate event listeners for the parent element
     var listeners = el.sprintEventListeners 
-    listeners && addListeners(listeners, clone)
+    listeners && addEventListeners(listeners, clone)
 
     // and its children
     var elChildren = findDescendants(el)
-    var cloneChildren
+    // cloneChildren is defined later to avoid calling findDescendants if not needed
+    var cloneChildren 
     var i = -1
     var l = elChildren.length
+
     while (++i < l) {
       var listeners = elChildren[i].sprintEventListeners
       if (listeners) {
         if (!cloneChildren) {
           cloneChildren = findDescendants(clone)
         }
-        addListeners(listeners, cloneChildren[i])
+        addEventListeners(listeners, cloneChildren[i])
       }
-    }
-
-    function addListeners(originalListeners, clone) {
-      var sprintClone = Sprint(clone)
-      Object.keys(originalListeners).forEach(function(key) {
-        originalListeners[key].forEach(function(callback) {
-          sprintClone.on(key, callback)
-        })
-      })
     }
   }
 
@@ -170,7 +172,9 @@ var Sprint;
       return this
     },
     appendTo: function(selector) {
-      selector instanceof Init || (selector = Sprint(selector))
+      if (!(selector instanceof Init)) {
+        selector = Sprint(selector)
+      }
       return Sprint(insertHTML.call(selector, "beforeend", this))
     },
     attr: function(name, value) {
@@ -194,32 +198,19 @@ var Sprint;
     },
     children: function(selector) {
       var dom = []
-      if (selector) {
-        var self = this
-        this.each(function() {
-          var nodes = this.childNodes
-          var i = -1
-          var l = nodes.length
+      var self = this
+      this.each(function() {
+        var nodes = this.children
+        var i = -1
+        var l = nodes.length
 
-          while (++i < l) {
-            var node = nodes[i]
-            if (node.nodeType == 1 && self.is(selector, node)) {
-              dom.push(node)
-            }
+        while (++i < l) {
+          var node = nodes[i]
+          if (!selector || self.is(selector, node)) {
+            dom.push(node)
           }
-        })
-      }
-      else
-        this.each(function() {
-          var nodes = this.childNodes
-          var i = -1
-          var l = nodes.length
-
-          while (++i < l) {
-            var node = nodes[i]
-            node.nodeType == 1 && dom.push(node)
-          }
-        })
+        }
+      })
       return Sprint(dom)
     },
     closest: function(selector) {
@@ -277,7 +268,6 @@ var Sprint;
         var nodes = this.querySelectorAll(selector)
         var i = -1
         var l = nodes.length
-
         while (++i < l) {
           dom.push(nodes.item(i))
         }
@@ -302,18 +292,13 @@ var Sprint;
     },
     next: function(selector) {
       var dom = []
-      if (selector === undefined) {
-        this.each(function() {
-          dom.push(this.nextElementSibling)
-        })
-      }
-      else {
-        var self = this
-        this.each(function() {
-          var next = this.nextElementSibling
-          self.is(selector, next) && dom.push(next)
-        })
-      }
+      var self = this
+      this.each(function() {
+        var next = this.nextElementSibling
+        if (!selector || self.is(selector, next)) {
+          dom.push(next)
+        }
+      })
       return Sprint(dom)
     },
     off: function(type, callback) {
@@ -360,8 +345,12 @@ var Sprint;
     on: function(type, callback) {
       this.each(function() {
         var callbackReference = callback
-        this.sprintEventListeners || (this.sprintEventListeners = {})
-        this.sprintEventListeners[type] || (this.sprintEventListeners[type] = [])
+        if (!this.sprintEventListeners) {
+          this.sprintEventListeners = {}
+        }
+        if (!this.sprintEventListeners[type]) {
+          this.sprintEventListeners[type] = []
+        }
         this.sprintEventListeners[type].push(callbackReference)
         this.addEventListener(type, callbackReference)
       })
@@ -369,20 +358,13 @@ var Sprint;
     },
     parent: function(selector) {
       var dom = []
-      if (selector) {
-        var self = this
-        this.each(function() {
-          var prt = this.parentNode
-          if (self.is(selector, prt)) {
-            dom.push(prt)
-          }
-        })
-      }
-      else {
-        this.each(function() {
-          dom.push(this.parentNode)
-        })
-      }
+      var self = this
+      this.each(function() {
+        var prt = this.parentNode
+        if (!selector || self.is(selector, prt)) {
+          dom.push(prt)
+        }
+      })
       return Sprint(dom)
     },
     removeAttr: function(name) {
@@ -398,7 +380,7 @@ var Sprint;
       return this
     },
     size: function() {
-      return this.get().length
+      return this.length
     },
     text: function(content) {
       if (content === undefined) {
