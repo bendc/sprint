@@ -412,22 +412,27 @@ var Sprint;
 
         var sprintElement = element instanceof Init ? element : Sprint(element)
         var outerWrap = sprintElement.get(0)
-        var nestedElements = typeof element == "string" && element.match(/</g).length > 2
+        var outerWrapHTML = typeof element == "string" ? element : outerWrap.outerHTML
+        var nestedElements = outerWrapHTML.match(/</g).length > 2
 
         this.each(function() {
           var clone = outerWrap.cloneNode(true)
           var prt = this.parentNode
           var next = this.nextSibling
+          var elementPrt
+
           if (nestedElements) {
             // find most inner child
             var innerWrap = clone.firstChild
             while (innerWrap.firstChild) innerWrap = innerWrap.firstChild
-            innerWrap.appendChild(this)
+            elementPrt = innerWrap
           }
           else {
-            duplicateEventListeners(outerWrap, clone)
-            clone.appendChild(this)
+            elementPrt = clone
           }
+
+          duplicateEventListeners(outerWrap, clone)
+          elementPrt.appendChild(this)
           prt.insertBefore(clone, next)
         })
       }
