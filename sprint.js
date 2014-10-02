@@ -131,6 +131,10 @@ var Sprint;
     }
   }
 
+  function setStyle(el, prop, value) {
+    el.style[prop] = value ? value : "none"
+  }
+
   function Init(selector) {
     switch (typeof selector) {
       case "string":
@@ -230,6 +234,49 @@ var Sprint;
         }
       })
       return Sprint(dom)
+    },
+    css: function(property, value) {
+      if (value != undefined) {
+        // set
+        if (typeof value == "string") {
+          this.each(function() {
+            setStyle(this, property, value)
+          })
+        }
+        // set
+        else if (typeof value == "function") {
+          this.each(function(index, element) {
+            setStyle(this, property, value(index, element))
+          })
+        }
+        return this
+      }
+      else {
+        // read
+        if (typeof property == "string") {
+          return getComputedStyle(this.get(0)).getPropertyValue(property)
+        }
+        // read
+        else if (Array.isArray(property)) {
+          var o = {}
+          var styles = getComputedStyle(this.get(0))
+          property.forEach(function(prop) {
+            o[prop] = styles.getPropertyValue(prop) 
+          })
+          return o
+        }
+        // set (property is an object)
+        else {
+          var properties = Object.keys(property)
+          this.each(function() {
+            var self = this
+            properties.forEach(function(prop) {
+              setStyle(self, prop, property[prop])
+            })
+          })
+          return this
+        }
+      }
     },
     each: function(callback) {
       // callback(index, element) where element == this
