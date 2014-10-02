@@ -449,6 +449,17 @@ var Sprint;
         : this.updateClass("remove", name)
       return this
     },
+    siblings: function(selector) {
+      var siblings = []
+      this.each(function() {
+        var self = this
+        Sprint(this).parent().children().each(function() {
+          if (this == self || (selector && !Sprint(this).is(selector))) return
+          siblings.push(this)
+        })
+      })
+      return Sprint(siblings)
+    },
     size: function() {
       return this.length
     },
