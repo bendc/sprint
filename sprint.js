@@ -334,14 +334,21 @@ var Sprint;
       return classFound
     },
     index: function(el) {
-      if (typeof el == "string") {
-        var toFind = this.get(0)
-        var elements = Sprint(el).get()
+      var toFind
+      var sprintElements
+      if (!el) {
+        toFind = this.eq(0).get(0)
+        sprintElements = this.eq(0).parent().children()
+      }
+      else if (typeof el == "string") {
+        toFind = this.get(0)
+        sprintElements = Sprint(el)
       }
       else {
-        var toFind = el instanceof Init ? el.get(0) : el
-        var elements = this.get()
+        toFind = el instanceof Init ? el.get(0) : el
+        sprintElements = this
       }
+      var elements = sprintElements.get()
       var i = -1
       var l = elements.length
       while (++i < l) {
