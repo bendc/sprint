@@ -333,6 +333,18 @@ var Sprint;
       })
       return classFound
     },
+    index: function(el) {
+      if (typeof el == "string") {
+        var toFind = this.get(0)
+        var elements = Sprint(el).get()
+        var i = -1
+        var l = elements.length
+        while (++i < l) {
+          if (elements[i] === toFind) return i
+        }
+        return -1
+      }
+    },
     is: function(selector, element) {
       var el = element || this.get(0)
       return el[matchSelector](selector)
