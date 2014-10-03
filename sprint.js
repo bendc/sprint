@@ -354,6 +354,18 @@ var Sprint;
 
         }
       }
+      else if (typeof value == "function") {
+      }
+      else {
+        var stringValue = value.toString()
+        if (!stringValue.match(/\D/)) {
+          stringValue += "px"
+        }
+        this.each(function() {
+          this.style.height = stringValue 
+        })
+        return this
+      }
     },
     index: function(el) {
       var toFind
