@@ -125,6 +125,14 @@ var Sprint;
     el.style[prop] = value ? value : "none"
   }
 
+  function setValueUnit(value) {
+    var stringValue = typeof value == "string" ? value : value.toString()
+    if (!stringValue.match(/\D/)) {
+      stringValue += "px"
+    }
+    return stringValue
+  }
+
   function Init(selector) {
     switch (typeof selector) {
       case "string":
@@ -334,38 +342,35 @@ var Sprint;
       return classFound
     },
     height: function(value) {
+      // read
       if (value === undefined) {
         var el = this.get(0)
         switch (el) {
-
           // height of HTML document
           case d:
             var offset = d.documentElement.offsetHeight
             var inner = window.innerHeight
             return offset > inner ? offset : inner
-
           // height of the viewport
           case window:
             return window.innerHeight
-
           // height of an element
           default:
             return el.getBoundingClientRect().height 
-
         }
       }
-      else if (typeof value == "function") {
-      }
+      // set
       else {
-        var stringValue = value.toString()
-        if (!stringValue.match(/\D/)) {
-          stringValue += "px"
-        }
-        this.each(function() {
-          this.style.height = stringValue 
+        var isFunction = typeof value == "function"
+        var stringValue = isFunction ? "" : setValueUnit(value)
+        this.each(function(index) {
+          if (isFunction) {
+            stringValue = setValueUnit(value.call(this, index, Sprint(this).height()))
+          }
+          setStyle(this, "height", stringValue)
         })
-        return this
       }
+      return this
     },
     index: function(el) {
       var toFind
