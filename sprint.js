@@ -29,17 +29,6 @@ var Sprint;
     return dom
   }
 
-  function selectByTag(tagName) {
-    switch (tagName) {
-      case "body":
-        return [d.body]
-      case d:
-        return [d]
-      default:
-        return d.getElementsByTagName(tagName)
-    }
-  }
-
   function selectElements(selector) {
     // .class, #id or tagName
     if (/^[\#.]?[\w-]+$/.test(selector)) {
@@ -49,7 +38,8 @@ var Sprint;
         case "#":
           return [d.getElementById(selector.slice(1))]
         default:
-          return selectByTag(selector)
+          if (selector == "body") return [d.body]
+          return d.getElementsByTagName(selector)
       }
     }
     return d.querySelectorAll(selector)
@@ -154,14 +144,15 @@ var Sprint;
         this.on("DOMContentLoaded", selector) 
         break
       default:
-        var selectorLength = selector.length
-        if (selectorLength === 0) {
-          this.dom = selector
-          this.length = selectorLength
+        // array or DOM element
+        var len = selector.length
+        if (!len || selector == window) {
+          this.dom = [selector]
+          this.length = 1
         }
         else {
-          this.dom = selectorLength ? selector : [selector]
-          this.length = selectorLength || 1
+          this.dom = selector
+          this.length = len
         }
     }
   }
@@ -342,12 +333,35 @@ var Sprint;
       })
       return classFound
     },
+    height: function(value) {
+      if (value === undefined) {
+        var el = this.get(0)
+        switch (el) {
+
+          // height of HTML document
+          case d:
+            var offset = d.documentElement.offsetHeight
+            var inner = window.innerHeight
+            return offset > inner ? offset : inner
+
+          // height of the viewport
+          case window:
+            return window.innerHeight
+
+          // height of an element
+          default:
+            return el.getBoundingClientRect().height 
+
+        }
+      }
+    },
     index: function(el) {
       var toFind
       var sprintElements
       if (!el) {
-        toFind = this.eq(0).get(0)
-        sprintElements = this.eq(0).parent().children()
+        var first = this.eq(0)
+        toFind = first.get(0)
+        sprintElements = first.parent().children()
       }
       else if (typeof el == "string") {
         toFind = this.get(0)
