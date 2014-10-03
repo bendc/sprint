@@ -301,12 +301,21 @@ var Sprint;
     },
     filter: function(selector) {
       var dom = []
-      var self = this
-      this.each(function() {
-        if (self.is(selector, this)) {
-          dom.push(this)
-        }
-      })
+      switch (typeof selector) {
+        case "string":
+          var self = this
+          this.each(function() {
+            self.is(selector, this) && dom.push(this)
+          })
+          break
+        case "function":
+          this.each(function(index, el) {
+            selector.call(this, index, el) && dom.push(this)
+          })
+          break
+        default:
+          return this
+      }
       return Sprint(dom)
     },
     find: function(selector) {
