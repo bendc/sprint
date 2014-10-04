@@ -154,7 +154,7 @@ var Sprint;
       default:
         // array or DOM element
         var len = selector.length
-        if (!len || selector == window) {
+        if (!len) {
           this.dom = [selector]
           this.length = 1
         }
@@ -236,18 +236,14 @@ var Sprint;
     },
     css: function(property, value) {
       if (value != undefined) {
-        // set
-        if (typeof value == "string") {
-          this.each(function() {
-            setStyle(this, property, value)
-          })
-        }
-        // set
-        else if (typeof value == "function") {
-          this.each(function(index, element) {
-            setStyle(this, property, value(index, element))
-          })
-        }
+        // set (string or function)
+        var isString = typeof value == "string"
+        this.each(function(index) {
+          if (!isString) {
+            var style = Sprint(this).css(property)
+          }
+          setStyle(this, property, isString ? value : value(index, style))
+        })
         return this
       }
       else {
@@ -376,9 +372,8 @@ var Sprint;
       var toFind
       var sprintElements
       if (!el) {
-        var first = this.eq(0)
-        toFind = first.get(0)
-        sprintElements = first.parent().children()
+        toFind = this.get(0)
+        sprintElements = this.eq(0).parent().children()
       }
       else if (typeof el == "string") {
         toFind = this.get(0)
