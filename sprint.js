@@ -4,6 +4,7 @@ var Sprint;
   "use strict"
 
   var d = document
+  var body = d.body
   var matchSelector = (function() {
     var prefixes = ["m", "webkitM", "msM", "mozM"]
     var i = -1
@@ -38,7 +39,7 @@ var Sprint;
         case "#":
           return [d.getElementById(selector.slice(1))]
         default:
-          if (selector == "body") return [d.body]
+          if (selector == "body") return [body]
           return d.getElementsByTagName(selector)
       }
     }
@@ -325,6 +326,9 @@ var Sprint;
       })
       return Sprint(dom)
     },
+    first: function() {
+      return Sprint(this.get(0))
+    },
     get: function(index) {
       return index === undefined ? this.dom : this.dom[index]
     },
@@ -373,7 +377,7 @@ var Sprint;
       var sprintElements
       if (!el) {
         toFind = this.get(0)
-        sprintElements = this.eq(0).parent().children()
+        sprintElements = this.first().parent().children()
       }
       else if (typeof el == "string") {
         toFind = this.get(0)
@@ -471,6 +475,19 @@ var Sprint;
         }
       })
       return Sprint(dom)
+    },
+    position: function() {
+      var bounding = {
+        first: getBounding(this.get(0)),
+        prt: getBounding(this.first().parent().get(0))
+      }
+      function getBounding(el) {
+        return el == body ? { top: 0, left: 0 } : el.getBoundingClientRect()
+      }
+      return {
+        top: bounding.first.top - bounding.prt.top,
+        left: bounding.first.left - bounding.prt.left
+      }
     },
     removeAttr: function(name) {
       this.each(function() {
