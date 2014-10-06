@@ -5,6 +5,7 @@ var Sprint;
 
   var d = document
   var body = d.body
+
   var matchSelector = (function() {
     var prefixes = ["m", "webkitM", "msM", "mozM"]
     var i = -1
@@ -16,6 +17,27 @@ var Sprint;
       }
     }
   })()
+
+  var adjacentHTMLSprintMethods = {
+    afterbegin: {
+      domMethod: function(clone) {
+        this.insertBefore(clone, this.firstChild)
+      },
+      sprintMethodName: "prepend"
+    },
+    beforebegin: {
+      domMethod: function(clone) {
+        this.parentNode.insertBefore(clone, this) 
+      },
+      sprintMethodName: "before"
+    },
+    beforeend: {
+      domMethod: function(clone) {
+        this.appendChild(clone) 
+      },
+      sprintMethodName: "append"
+    }
+  }
 
   function toArray(obj) {
     // Converts array-like objects to actual arrays.
@@ -89,20 +111,10 @@ var Sprint;
       })
     }
     else if (typeof content == "function") {
+      var sprintMethodName = adjacentHTMLSprintMethods[position].sprintMethodName
       this.each(function(index) {
-        var methodName
-        switch (position) {
-          case "afterbegin":
-            methodName = "prepend"
-            break
-          case "beforebegin":
-            methodName = "before"
-            break
-          case "beforeend":
-            methodName = "append"
-            break
-        }
-        Sprint(this)[methodName](content.call(this, index, this.innerHTML))
+        var callbackValue = content.call(this, index, this.innerHTML)
+        Sprint(this)[sprintMethodName](callbackValue)
       })
     }
     else {
@@ -113,23 +125,11 @@ var Sprint;
       var elementsToInsert = content.nodeType ? [content] : toArray(content)
       position == "afterbegin" && elementsToInsert.reverse()
 
-      var methods = {
-        afterbegin: function(clone) {
-          this.insertBefore(clone, this.firstChild)
-        },
-        beforebegin: function(clone) {
-          this.parentNode.insertBefore(clone, this) 
-        },
-        beforeend: function(clone) {
-          this.appendChild(clone) 
-        }
-      }
-
       this.each(function(index) {
         var self = this
         elementsToInsert.forEach(function(el) {
           var clone = el.cloneNode(true)
-          methods[position].call(self, clone)
+          adjacentHTMLSprintMethods[position].domMethod.call(self, clone)
           duplicateEventListeners(el, clone)
           clonedElements.push(clone)
 
