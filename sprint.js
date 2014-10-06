@@ -88,18 +88,40 @@ var Sprint;
         this.insertAdjacentHTML(position, content)
       })
     }
+    else if (typeof content == "function") {
+      this.each(function(index) {
+        var methodName
+        switch (position) {
+          case "afterbegin":
+            methodName = "prepend"
+            break
+          case "beforebegin":
+            methodName = "before"
+            break
+          case "beforeend":
+            methodName = "append"
+            break
+        }
+        Sprint(this)[methodName](content.call(this, index, this.innerHTML))
+      })
+    }
     else {
       // DOM node: single existing DOM node, createTextNode() or createElement()
       // Or collection: $("div"), [element1, element2], document.getElementsByTagName, etc.
 
-      var elementsToInsert = content.nodeType ? [content] : toArray(content)
       var clonedElements = []
+      var elementsToInsert = content.nodeType ? [content] : toArray(content)
+      position == "afterbegin" && elementsToInsert.reverse()
+
       var methods = {
-        beforeend: function(clone) {
-          this.appendChild(clone) 
+        afterbegin: function(clone) {
+          this.insertBefore(clone, this.firstChild)
         },
         beforebegin: function(clone) {
           this.parentNode.insertBefore(clone, this) 
+        },
+        beforeend: function(clone) {
+          this.appendChild(clone) 
         }
       }
 
@@ -489,6 +511,10 @@ var Sprint;
         top: bounding.first.top - bounding.prt.top,
         left: bounding.first.left - bounding.prt.left
       }
+    },
+    prepend: function(content) {
+      insertHTML.call(this, "afterbegin", content)
+      return this
     },
     removeAttr: function(name) {
       this.each(function() {
