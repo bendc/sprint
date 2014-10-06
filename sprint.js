@@ -153,16 +153,17 @@ var Sprint;
         this.on("DOMContentLoaded", selector) 
         break
       default:
-        // array or DOM element
-        var len = selector.length
-        if (!len) {
-          this.dom = [selector]
-          this.length = 1
+        if (
+          selector instanceof Array ||
+          selector instanceof NodeList ||
+          selector instanceof HTMLCollection
+        ) {
+          this.dom = selector
         }
         else {
-          this.dom = selector
-          this.length = len
+          this.dom = [selector]
         }
+        this.length = this.dom.length
     }
   }
 
@@ -514,6 +515,22 @@ var Sprint;
     },
     size: function() {
       return this.length
+    },
+    slice: function(start, end) {
+      var dom = this.get()
+      var range = []
+      var i = start >= 0 ? start : start + this.length
+      var l = this.length
+      if (end < 0) {
+        l += end
+      }
+      else if (end >= 0) {
+        l = end > this.length ? this.length : end
+      }
+      for (; i < l; i++) {
+        range.push(dom[i])
+      }
+      return Sprint(range)
     },
     text: function(content) {
       if (content === undefined) {
