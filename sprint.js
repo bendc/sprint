@@ -5,7 +5,6 @@ var Sprint;
 
   var d = document
   var body = d.body
-
   var matchSelector = (function() {
     var prefixes = ["m", "webkitM", "msM", "mozM"]
     var i = -1
@@ -17,27 +16,6 @@ var Sprint;
       }
     }
   })()
-
-  var adjacentHTMLSprintMethods = {
-    afterbegin: {
-      domMethod: function(clone) {
-        this.insertBefore(clone, this.firstChild)
-      },
-      sprintMethodName: "prepend"
-    },
-    beforebegin: {
-      domMethod: function(clone) {
-        this.parentNode.insertBefore(clone, this) 
-      },
-      sprintMethodName: "before"
-    },
-    beforeend: {
-      domMethod: function(clone) {
-        this.appendChild(clone) 
-      },
-      sprintMethodName: "append"
-    }
-  }
 
   function toArray(obj) {
     // Converts array-like objects to actual arrays.
@@ -111,10 +89,9 @@ var Sprint;
       })
     }
     else if (typeof content == "function") {
-      var sprintMethodName = adjacentHTMLSprintMethods[position].sprintMethodName
       this.each(function(index) {
         var callbackValue = content.call(this, index, this.innerHTML)
-        Sprint(this)[sprintMethodName](callbackValue)
+        insertHTML.call(Sprint(this), position, callbackValue)
       })
     }
     else {
@@ -125,11 +102,23 @@ var Sprint;
       var elementsToInsert = content.nodeType ? [content] : toArray(content)
       position == "afterbegin" && elementsToInsert.reverse()
 
+      var domMethods = {
+        afterbegin: function(clone) {
+          this.insertBefore(clone, this.firstChild)
+        },
+        beforebegin: function(clone) {
+          this.parentNode.insertBefore(clone, this) 
+        },
+        beforeend: function(clone) {
+          this.appendChild(clone) 
+        }
+      }
+
       this.each(function(index) {
         var self = this
         elementsToInsert.forEach(function(el) {
           var clone = el.cloneNode(true)
-          adjacentHTMLSprintMethods[position].domMethod.call(self, clone)
+          domMethods[position].call(self, clone)
           duplicateEventListeners(el, clone)
           clonedElements.push(clone)
 
@@ -175,6 +164,7 @@ var Sprint;
         this.on("DOMContentLoaded", selector) 
         break
       default:
+        if (selector instanceof Init) return selector
         if (
           selector instanceof Array ||
           selector instanceof NodeList ||
@@ -190,6 +180,15 @@ var Sprint;
   }
 
   Init.prototype = {
+    add: function(selector) {
+      var added = Sprint(selector)
+      var dom = toArray(added)
+      this.each(function() {
+        dom.push(this)
+      })
+      added.length = dom.length
+      return added
+    },
     addClass: function(name) {
       this.updateClass("add", name)
       return this
@@ -199,10 +198,7 @@ var Sprint;
       return this
     },
     appendTo: function(selector) {
-      if (!(selector instanceof Init)) {
-        selector = Sprint(selector)
-      }
-      return Sprint(insertHTML.call(selector, "beforeend", this))
+      return Sprint(insertHTML.call(Sprint(selector), "beforeend", this))
     },
     attr: function(name, value) {
       if (value === undefined) {
@@ -586,8 +582,7 @@ var Sprint;
       else {
         toArray(this)
 
-        var sprintElement = element instanceof Init ? element : Sprint(element)
-        var outerWrap = sprintElement.get(0)
+        var outerWrap = Sprint(element).get(0)
         var outerWrapHTML = typeof element == "string" ? element : outerWrap.outerHTML
         var nestedElements = outerWrapHTML.match(/</g).length > 2
 
