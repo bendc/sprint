@@ -311,7 +311,11 @@ var Sprint;
       return this
     },
     eq: function(index) {
-      var dom = index < this.length ? [this.get(index)] : []
+      var dom = []
+      if (index < this.length) {
+        if (index < 0) index += this.length
+        dom.push(this.get(index))
+      }
       return Sprint(dom)
     },
     filter: function(selector) {
@@ -346,7 +350,7 @@ var Sprint;
       return Sprint(dom)
     },
     first: function() {
-      return Sprint(this.get(0))
+      return this.eq(0)
     },
     get: function(index) {
       return index === undefined ? this.dom : this.dom[index]
@@ -417,6 +421,9 @@ var Sprint;
     is: function(selector, element) {
       var el = element || this.get(0)
       return el[matchSelector](selector)
+    },
+    last: function() {
+      return this.eq(-1)
     },
     next: function(selector) {
       var dom = []
