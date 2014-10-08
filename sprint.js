@@ -519,6 +519,15 @@ var Sprint;
       insertHTML.call(this, "afterbegin", content)
       return this
     },
+    remove: function(selector) {
+      toArray(this)
+      this.each(function() {
+        if (!selector || Sprint(this).is(selector)) {
+          this.parentNode.removeChild(this)
+        }
+      })
+      return this
+    },
     removeAttr: function(name) {
       this.each(function() {
         this.removeAttribute(name)
