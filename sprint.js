@@ -236,6 +236,15 @@ var Sprint;
       })
       return Sprint(dom)
     },
+    clone: function(withEvents) {
+      var cloned = []
+      this.each(function() {
+        var clone = this.cloneNode(true)
+        withEvents && duplicateEventListeners(this, clone)
+        cloned.push(clone)
+      })
+      return Sprint(cloned)
+    },
     closest: function(selector) {
       var dom = []
       var self = this
