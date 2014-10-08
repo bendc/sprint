@@ -445,6 +445,13 @@ var Sprint;
       })
       return Sprint(dom)
     },
+    not: function(selector) {
+      var filtered = []
+      this.each(function() {
+        Sprint(this).is(selector) || filtered.push(this)
+      })
+      return Sprint(filtered)
+    },
     off: function(type, callback) {
       switch (arguments.length) {
         // .off()
