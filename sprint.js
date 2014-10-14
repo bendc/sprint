@@ -6,39 +6,6 @@ var Sprint;
   var d = document
   var matchSelector = Element.prototype.matches ? "matches" : "msMatchesSelector"
 
-  function toArray(obj) {
-    // Converts array-like objects to actual arrays.
-    // If obj is a Sprint object, the DOM reference gets updated.
-
-    if (obj instanceof Array) return obj
-    var isSprintObj = obj instanceof Init
-    var dom = [].map.call(isSprintObj ? obj.get() : obj, function(el) {
-      return el
-    })
-    if (isSprintObj) obj.dom = dom
-    return dom
-  }
-
-  function selectElements(selector) {
-    // .class, #id or tagName
-    if (/^[\#.]?[\w-]+$/.test(selector)) {
-      switch (selector[0]) {
-        case ".":
-          return d.getElementsByClassName(selector.slice(1))
-        case "#":
-          return [d.getElementById(selector.slice(1))]
-        default:
-          if (selector == "body") return [d.body]
-          return d.getElementsByTagName(selector)
-      }
-    }
-    return d.querySelectorAll(selector)
-  }
-
-  function findDescendants(parent) {
-    return parent.getElementsByTagName("*") 
-  }
-
   function addEventListeners(listeners, el) {
     var sprintClone = Sprint(el)
     Object.keys(listeners).forEach(function(key) {
@@ -69,6 +36,10 @@ var Sprint;
         addEventListeners(listeners, cloneChildren[i])
       }
     }
+  }
+
+  function findDescendants(parent) {
+    return parent.getElementsByTagName("*") 
   }
 
   function insertHTML(position, content) {
@@ -122,6 +93,22 @@ var Sprint;
     }
   }
 
+  function selectElements(selector) {
+    // .class, #id or tagName
+    if (/^[\#.]?[\w-]+$/.test(selector)) {
+      switch (selector[0]) {
+        case ".":
+          return d.getElementsByClassName(selector.slice(1))
+        case "#":
+          return [d.getElementById(selector.slice(1))]
+        default:
+          if (selector == "body") return [d.body]
+          return d.getElementsByTagName(selector)
+      }
+    }
+    return d.querySelectorAll(selector)
+  }
+
   function setStyle(el, prop, value) {
     el.style[prop] = value ? value : "none"
   }
@@ -132,6 +119,19 @@ var Sprint;
       stringValue += "px"
     }
     return stringValue
+  }
+
+  function toArray(obj) {
+    // Converts array-like objects to actual arrays.
+    // If obj is a Sprint object, the DOM reference gets updated.
+
+    if (obj instanceof Array) return obj
+    var isSprintObj = obj instanceof Init
+    var dom = [].map.call(isSprintObj ? obj.get() : obj, function(el) {
+      return el
+    })
+    if (isSprintObj) obj.dom = dom
+    return dom
   }
 
   // constructor
@@ -194,18 +194,29 @@ var Sprint;
       return Sprint(insertHTML.call(Sprint(selector), "beforeend", this))
     },
     attr: function(name, value) {
+      if (typeof value == "string") {
+        this.each(function() {
+          this.setAttribute(name, value)
+        })
+        return this
+      }
+
+      if (typeof name == "object") {
+        var attributeNames = Object.keys(name)
+        this.each(function(i, el) {
+          attributeNames.forEach(function(attribute) {
+            el.setAttribute(attribute, name[attribute])
+          })
+        })
+        return this
+      }
+
       if (value === undefined) {
         var attributes = []
         this.each(function() {
           attributes.push(this.getAttribute(name))
         })
         return attributes.length == 1 ? attributes[0] : attributes
-      }
-      else {
-        this.each(function() {
-          this.setAttribute(name, value)
-        })
-        return this
       }
     },
     before: function(content) { 
@@ -299,9 +310,10 @@ var Sprint;
       // callback(index, element) where element == this
       var i = -1
       var l = this.length
+      var dom = this.dom
 
       while (++i < l) {
-        var node = this.dom[i]
+        var node = dom[i]
         callback.call(node, i, node) 
       }
       return this
@@ -648,5 +660,7 @@ var Sprint;
     return new Init(selector)
   }
 
-  window.$ === undefined && (window.$ = Sprint)
+  if (window.$ === undefined) {
+    window.$ = Sprint
+  }
 })();
