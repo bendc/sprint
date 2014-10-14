@@ -297,7 +297,7 @@ var Sprint;
       var l = this.length
 
       while (++i < l) {
-        var node = this.dom[index]
+        var node = this.dom[i]
         callback.call(node, i, node) 
       }
       return this
@@ -309,12 +309,7 @@ var Sprint;
       return this
     },
     eq: function(index) {
-      var dom = []
-      if (index < this.length) {
-        if (index < 0) index += this.length
-        dom.push(this.get(index))
-      }
-      return Sprint(dom)
+      return Sprint(this.get(index))
     },
     filter: function(selector) {
       var dom = []
@@ -351,7 +346,13 @@ var Sprint;
       return this.eq(0)
     },
     get: function(index) {
-      return index === undefined ? this.dom : this.dom[index]
+      if (index === undefined) {
+        return this.dom
+      }
+      if (index < 0) {
+        index += this.length
+      }
+      return this.dom[index]
     },
     hasClass: function(name) {
       var classFound = false
