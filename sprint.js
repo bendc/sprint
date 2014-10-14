@@ -4,18 +4,7 @@ var Sprint;
   "use strict"
 
   var d = document
-  var body = d.body
-  var matchSelector = (function() {
-    var prefixes = ["m", "webkitM", "msM", "mozM"]
-    var i = -1
-    var l = prefixes.length
-    while (++i < l) {
-      var name = prefixes[i] + "atchesSelector"
-      if (Element.prototype[name]) {
-        return name
-      }
-    }
-  })()
+  var matchSelector = Element.prototype.matches ? "matches" : "msMatchesSelector"
 
   function toArray(obj) {
     // Converts array-like objects to actual arrays.
@@ -39,7 +28,7 @@ var Sprint;
         case "#":
           return [d.getElementById(selector.slice(1))]
         default:
-          if (selector == "body") return [body]
+          if (selector == "body") return [d.body]
           return d.getElementsByTagName(selector)
       }
     }
@@ -308,7 +297,7 @@ var Sprint;
       var l = this.length
 
       while (++i < l) {
-        var node = this.get(i)
+        var node = this.dom[index]
         callback.call(node, i, node) 
       }
       return this
@@ -524,7 +513,7 @@ var Sprint;
         prt: getBounding(this.first().parent().get(0))
       }
       function getBounding(el) {
-        return el == body ? { top: 0, left: 0 } : el.getBoundingClientRect()
+        return el == d.body ? { top: 0, left: 0 } : el.getBoundingClientRect()
       }
       return {
         top: bounding.first.top - bounding.prt.top,
