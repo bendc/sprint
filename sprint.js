@@ -134,6 +134,8 @@ var Sprint;
     return stringValue
   }
 
+  // constructor
+
   function Init(selector) {
     switch (typeof selector) {
       case "string":
@@ -179,7 +181,9 @@ var Sprint;
       return added
     },
     addClass: function(name) {
-      this.updateClass("add", name)
+      this.each(function() {
+        this.classList.add(name)
+      })
       return this
     },
     append: function(content) {
@@ -543,7 +547,9 @@ var Sprint;
     removeClass: function(name) {
       name === undefined
         ? this.removeAttr("class")
-        : this.updateClass("remove", name)
+        : this.each(function() {
+            this.classList.remove(name)
+          })
       return this
     },
     siblings: function(selector) {
@@ -592,7 +598,9 @@ var Sprint;
       }
     },
     toggleClass: function(name) {
-      this.updateClass("toggle", name)
+      this.each(function() {
+        this.classList.toggle(name)
+      })
       return this
     },
     wrap: function(element) {
@@ -631,13 +639,6 @@ var Sprint;
       }
 
       return this
-    },
-
-    // undocumented, mostly for internal use
-    updateClass: function(method, name) {
-      this.each(function() {
-        this.classList[method](name)
-      })
     }
   }
 
