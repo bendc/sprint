@@ -196,7 +196,7 @@ var Sprint;
     attr: function(name, value) {
       var stringValue = typeof value == "string"
 
-      if (stringValue || typeof value == "function") {
+      if (stringValue || typeof value == "function") {
         this.each(function(i) {
           this.setAttribute(
             name, stringValue ? value : value.call(this, i, this.getAttribute(name))
@@ -216,11 +216,7 @@ var Sprint;
       }
 
       if (value === undefined) {
-        var attributes = []
-        this.each(function() {
-          attributes.push(this.getAttribute(name))
-        })
-        return attributes.length == 1 ? attributes[0] : attributes
+        return this.get(0).getAttribute(name)
       }
     },
     before: function(content) { 
