@@ -194,9 +194,13 @@ var Sprint;
       return Sprint(insertHTML.call(Sprint(selector), "beforeend", this))
     },
     attr: function(name, value) {
-      if (typeof value == "string") {
-        this.each(function() {
-          this.setAttribute(name, value)
+      var stringValue = typeof value == "string"
+
+      if (stringValue || typeof value == "function") {
+        this.each(function(i) {
+          this.setAttribute(
+            name, stringValue ? value : value.call(this, i, this.getAttribute(name))
+          )
         })
         return this
       }
@@ -296,10 +300,9 @@ var Sprint;
         // set (property is an object)
         else {
           var properties = Object.keys(property)
-          this.each(function() {
-            var self = this
+          this.each(function(i, el) {
             properties.forEach(function(prop) {
-              setStyle(self, prop, property[prop])
+              setStyle(el, prop, property[prop])
             })
           })
           return this
@@ -566,10 +569,9 @@ var Sprint;
     },
     siblings: function(selector) {
       var siblings = []
-      this.each(function() {
-        var self = this
+      this.each(function(i, el) {
         Sprint(this).parent().children().each(function() {
-          if (this == self || (selector && !Sprint(this).is(selector))) return
+          if (this == el || (selector && !Sprint(this).is(selector))) return
           siblings.push(this)
         })
       })
