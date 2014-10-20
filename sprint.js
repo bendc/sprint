@@ -433,8 +433,51 @@ var Sprint;
       return -1
     },
     is: function(selector, element) {
-      var el = element || this.get(0)
-      return el[matchSelector](selector)
+      // element is undocumented, internal-use only.
+      // It gives better perfs as it prevents the creation of many objects in internal methods.
+
+      var set = element ? [element] : this.get()
+      var i = -1
+      var l = set.length
+
+      if (typeof selector == "string") {
+        while (++i < l) {
+          if (set[i][matchSelector](selector)) {
+            return true
+          }
+        }
+        return false
+      }
+
+      if (typeof selector == "object") {
+        // Sprint object or DOM element(s)
+        var obj
+        if (selector instanceof Init) {
+          obj = selector.get()
+        }
+        else {
+          obj = selector.length ? selector : [selector]
+        }
+        var objLength = obj.length
+        while (++i < l) {
+          var j = -1
+          while (++j < objLength) {
+            if (set[i] === obj[j]) {
+              return true
+            }
+          }
+        }
+        return false
+      }
+
+      if (typeof selector == "function") {
+        while (++i < l) {
+          if (selector.call(this, i, this)) {
+            return true
+          }
+        }
+        return false
+      }
     },
     last: function() {
       return this.eq(-1)
