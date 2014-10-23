@@ -509,6 +509,21 @@ var Sprint;
     last: function() {
       return this.eq(-1)
     },
+    map: function(callback) {
+      var values = []
+      this.each(function(i) {
+        var val = callback.call(this, i, this)
+        if (Array.isArray(val)) {
+          val.forEach(function(el) {
+            values.push(el)
+          })
+        }
+        else {
+          val == undefined || values.push(val)
+        }
+      })
+      return Sprint(values)
+    },
     next: function(selector) {
       var dom = []
       var self = this
