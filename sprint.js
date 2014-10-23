@@ -216,7 +216,7 @@ var Sprint;
         return this
       }
 
-      if (value === undefined) {
+      if (value == null) {
         return this.get(0).getAttribute(name)
       }
     },
@@ -253,9 +253,9 @@ var Sprint;
     closest: function(selector) {
       var dom = []
       var self = this
+      var root = d.documentElement
       this.each(function() {
         var prt = this.parentNode
-        var root = d.documentElement
         while (prt != root) {
           if (self.is(selector, prt)) {
             dom.push(prt)
@@ -269,7 +269,7 @@ var Sprint;
       return Sprint(dom)
     },
     css: function(property, value) {
-      if (value != undefined) {
+      if (value != null) {
         // set (string or function)
         var isString = typeof value == "string"
         this.each(function(index) {
@@ -362,7 +362,7 @@ var Sprint;
       return this.eq(0)
     },
     get: function(index) {
-      if (index === undefined) {
+      if (index == null) {
         return this.dom
       }
       if (index < 0) {
@@ -407,7 +407,7 @@ var Sprint;
     },
     height: function(value) {
       // read
-      if (value === undefined) {
+      if (value == null) {
         var el = this.get(0)
         switch (el) {
           // height of HTML document
@@ -515,11 +515,11 @@ var Sprint;
         var val = callback.call(this, i, this)
         if (Array.isArray(val)) {
           val.forEach(function(el) {
-            values.push(el)
+            val == null || values.push(el)
           })
         }
         else {
-          val == undefined || values.push(val)
+          val == null || values.push(val)
         }
       })
       return Sprint(values)
@@ -641,7 +641,7 @@ var Sprint;
       return this
     },
     removeClass: function(name) {
-      name === undefined
+      name == null
         ? this.removeAttr("class")
         : this.each(function() {
             this.classList.remove(name)
@@ -678,7 +678,7 @@ var Sprint;
       return Sprint(range)
     },
     text: function(content) {
-      if (content === undefined) {
+      if (content == null) {
         var texts = []
         this.each(function() {
           texts.push(this.textContent)
@@ -743,7 +743,7 @@ var Sprint;
     return new Init(selector)
   }
 
-  if (window.$ === undefined) {
+  if (window.$ == null) {
     window.$ = Sprint
   }
 })();
