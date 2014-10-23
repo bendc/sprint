@@ -21,8 +21,8 @@ var Sprint;
     listeners && addEventListeners(listeners, clone)
 
     // and its children
-    var elChildren = findDescendants(el)
-    // cloneChildren is defined later to avoid calling findDescendants if not needed
+    var elChildren = selectElements("*", el)
+    // cloneChildren is defined later to avoid searching descendants if not needed
     var cloneChildren 
     var i = -1
     var l = elChildren.length
@@ -31,15 +31,11 @@ var Sprint;
       var listeners = elChildren[i].sprintEventListeners
       if (listeners) {
         if (!cloneChildren) {
-          cloneChildren = findDescendants(clone)
+          cloneChildren = selectElements("*", clone)
         }
         addEventListeners(listeners, cloneChildren[i])
       }
     }
-  }
-
-  function findDescendants(parent) {
-    return parent.getElementsByTagName("*") 
   }
 
   function insertHTML(position, content) {
@@ -88,25 +84,30 @@ var Sprint;
         })
       })
 
-      if (content instanceof Init) content.dom = clonedElements
+      if (content instanceof Init) {
+        content.dom = clonedElements
+      }
       return clonedElements
     }
   }
 
-  function selectElements(selector) {
+  function selectElements(selector, context) {
+    context = context || d
     // .class, #id or tagName
     if (/^[\#.]?[\w-]+$/.test(selector)) {
       switch (selector[0]) {
         case ".":
-          return d.getElementsByClassName(selector.slice(1))
+          return context.getElementsByClassName(selector.slice(1))
         case "#":
-          return [d.getElementById(selector.slice(1))]
+          return [context.getElementById(selector.slice(1))]
         default:
-          if (selector == "body") return [d.body]
-          return d.getElementsByTagName(selector)
+          if (selector == "body") {
+            return [d.body]
+          }
+          return context.getElementsByTagName(selector)
       }
     }
-    return d.querySelectorAll(selector)
+    return context.querySelectorAll(selector)
   }
 
   function setStyle(el, prop, value) {
@@ -348,11 +349,11 @@ var Sprint;
     find: function(selector) {
       var dom = []
       this.each(function() {
-        var nodes = this.querySelectorAll(selector)
+        var nodes = selectElements(selector, this)
         var i = -1
         var l = nodes.length
         while (++i < l) {
-          dom.push(nodes.item(i))
+          dom.push(nodes[i])
         }
       })
       return Sprint(dom)
@@ -368,6 +369,32 @@ var Sprint;
         index += this.length
       }
       return this.dom[index]
+    },
+    has: function(selector) {
+      // .has(selector)
+      if (typeof selector == "string") {
+        var dom = []
+        this.each(function() {
+          selectElements(selector, this)[0] && dom.push(this)
+        })
+        return Sprint(dom)
+      }
+
+      // .has(contained)
+      var i = -1
+      var thisLength = this.length
+      while (++i < thisLength) {
+        var el = this.get(i)
+        var descendants = selectElements("*", el)
+        var j = -1
+        var descendantsLength = descendants.length
+        while (++j < descendantsLength) {
+          if (descendants[j] === selector) {
+            return Sprint(el)
+          }
+        }
+      }
+      return Sprint([])
     },
     hasClass: function(name) {
       var classFound = false
