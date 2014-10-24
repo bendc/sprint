@@ -38,6 +38,22 @@ var Sprint;
     }
   }
 
+  function findDomElement(elementToFind, returnParent) {
+    var i = -1
+    var l = this.length
+    while (++i < l) {
+      var descendants = selectElements("*", this.get(i))
+      var j = -1
+      var descendantsLength = descendants.length
+      while (++j < descendantsLength) {
+        if (descendants[j] == elementToFind) {
+          return Sprint(returnParent ? this.get(i) : elementToFind)
+        }
+      }
+    }
+    return Sprint([])
+  }
+
   function insertHTML(position, content) {
     if (typeof content == "string") {
       this.each(function() {
@@ -93,7 +109,7 @@ var Sprint;
 
   function selectElements(selector, context) {
     context = context || d
-    // .class, #id or tagName
+    // class, id, tag name or universal selector
     if (/^[\#.]?[\w-]+$/.test(selector)) {
       switch (selector[0]) {
         case ".":
@@ -347,16 +363,22 @@ var Sprint;
       return Sprint(dom)
     },
     find: function(selector) {
-      var dom = []
-      this.each(function() {
-        var nodes = selectElements(selector, this)
-        var i = -1
-        var l = nodes.length
-        while (++i < l) {
-          dom.push(nodes[i])
-        }
-      })
-      return Sprint(dom)
+      // .find(selector)
+      if (typeof selector == "string") {
+        var dom = []
+        this.each(function() {
+          var nodes = selectElements(selector, this)
+          var i = -1
+          var l = nodes.length
+          while (++i < l) {
+            dom.push(nodes[i])
+          }
+        })
+        return Sprint(dom)
+      }
+
+      // .find(element)
+      return findDomElement.call(this, selector)
     },
     first: function() {
       return this.eq(0)
@@ -381,20 +403,7 @@ var Sprint;
       }
 
       // .has(contained)
-      var i = -1
-      var thisLength = this.length
-      while (++i < thisLength) {
-        var el = this.get(i)
-        var descendants = selectElements("*", el)
-        var j = -1
-        var descendantsLength = descendants.length
-        while (++j < descendantsLength) {
-          if (descendants[j] === selector) {
-            return Sprint(el)
-          }
-        }
-      }
-      return Sprint([])
+      return findDomElement.call(this, selector, true)
     },
     hasClass: function(name) {
       var classFound = false
