@@ -38,7 +38,12 @@ var Sprint;
     }
   }
 
-  function findDomElement(elementToFind, returnParent) {
+  function findDomElements(elementsToFind, returnParent) {
+    elementsToFind = elementsToFind instanceof Init
+                   ? elementsToFind.get()
+                   : [elementsToFind]
+    var elementsToFindLength = elementsToFind.length
+    var dom = []
     var i = -1
     var l = this.length
     while (++i < l) {
@@ -46,12 +51,19 @@ var Sprint;
       var j = -1
       var descendantsLength = descendants.length
       while (++j < descendantsLength) {
-        if (descendants[j] == elementToFind) {
-          return Sprint(returnParent ? this.get(i) : elementToFind)
+        var k = -1
+        while (++k < elementsToFindLength) {
+          if (descendants[j] == elementsToFind[k]) {
+            var returnedElement = returnParent ? this.get(i) : elementsToFind[k]
+            if (elementsToFindLength < 2) {
+              return Sprint(returnedElement)
+            }
+            dom.push(returnedElement)
+          }
         }
       }
     }
-    return Sprint([])
+    return Sprint(dom)
   }
 
   function insertHTML(position, content) {
@@ -378,7 +390,7 @@ var Sprint;
       }
 
       // .find(element)
-      return findDomElement.call(this, selector)
+      return findDomElements.call(this, selector)
     },
     first: function() {
       return this.eq(0)
@@ -403,7 +415,7 @@ var Sprint;
       }
 
       // .has(contained)
-      return findDomElement.call(this, selector, true)
+      return findDomElements.call(this, selector, true)
     },
     hasClass: function(name) {
       var classFound = false
