@@ -103,7 +103,8 @@ var Sprint;
         elementsToInsert.forEach(function(el) {
           var clone = el.cloneNode(true)
           domMethods[position].call(self, clone)
-          duplicateEventListeners(el, clone)
+          // don't duplicate listeners for createTextNode()
+          el.nodeType == 3 || duplicateEventListeners(el, clone)
           clonedElements.push(clone)
 
           if (index > 0) return
@@ -259,7 +260,6 @@ var Sprint;
         var nodes = this.children
         var i = -1
         var l = nodes.length
-
         while (++i < l) {
           var node = nodes[i]
           if (!selector || self.is(selector, node)) {
@@ -456,6 +456,23 @@ var Sprint;
         })
       }
       return this
+    },
+    html: function(htmlString) {
+      if (htmlString == null) {
+        return this.get(0).innerHTML
+      }
+      if (typeof htmlString == "string") {
+        return this.each(function() {
+          this.innerHTML = htmlString
+        })
+      }
+      if (typeof htmlString == "function") {
+        this.each(function(i) {
+          var content = htmlString.call(this, i, this.innerHTML)
+          Sprint(this).html(content)
+        })
+        return this
+      }
     },
     index: function(el) {
       var toFind
