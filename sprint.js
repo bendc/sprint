@@ -4,7 +4,14 @@ var Sprint;
   "use strict"
 
   var d = document
-  var matchSelector = Element.prototype.matches ? "matches" : "msMatchesSelector"
+  var matchSelector = "matches"
+  if (!Element.prototype.matches) {
+    matchSelector = Element.prototype.mozMatchesSelector
+                  ? "mozMatchesSelector"
+                  : "msMatchesSelector"
+  }
+  // When Firefox 34 is out, replace this implementation with:
+  // var matchSelector = Element.prototype.matches ? "matches" : "msMatchesSelector"
 
   function addEventListeners(listeners, el) {
     var sprintClone = Sprint(el)
@@ -118,6 +125,19 @@ var Sprint;
       }
       return clonedElements
     }
+  }
+
+  function selectAdjacentSiblings(position, selector) {
+    var dom = []
+    var self = this
+    this.each(function() {
+      var el = this[position + "ElementSibling"]
+      if (!el) return
+      if (!selector || self.is(selector, el)) {
+        dom.push(el)
+      }
+    })
+    return Sprint(dom)
   }
 
   function selectElements(selector, context) {
@@ -563,15 +583,7 @@ var Sprint;
       return Sprint(values)
     },
     next: function(selector) {
-      var dom = []
-      var self = this
-      this.each(function() {
-        var next = this.nextElementSibling
-        if (!selector || self.is(selector, next)) {
-          dom.push(next)
-        }
-      })
-      return Sprint(dom)
+      return selectAdjacentSiblings.call(this, "next", selector)
     },
     not: function(selector) {
       var filtered = []
@@ -662,6 +674,9 @@ var Sprint;
     prepend: function(content) {
       insertHTML.call(this, "afterbegin", content)
       return this
+    },
+    prev: function(selector) {
+      return selectAdjacentSiblings.call(this, "previous", selector)
     },
     remove: function(selector) {
       toArray(this)
