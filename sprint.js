@@ -23,6 +23,9 @@ var Sprint;
   }
 
   function duplicateEventListeners(el, clone) {
+    // createTextNode()
+    if (el.nodeType == 3) return
+  
     // duplicate event listeners for the parent element
     var listeners = el.sprintEventListeners 
     listeners && addEventListeners(listeners, clone)
@@ -110,8 +113,7 @@ var Sprint;
         elementsToInsert.forEach(function(el) {
           var clone = el.cloneNode(true)
           domMethods[position].call(self, clone)
-          // don't duplicate listeners for createTextNode()
-          el.nodeType == 3 || duplicateEventListeners(el, clone)
+          duplicateEventListeners(el, clone)
           clonedElements.push(clone)
 
           if (index > 0) return
@@ -174,13 +176,16 @@ var Sprint;
   function toArray(obj) {
     // Converts array-like objects to actual arrays.
     // If obj is a Sprint object, the DOM reference gets updated.
-
-    if (obj instanceof Array) return obj
+    if (Array.isArray(obj)) {
+      return obj
+    }
     var isSprintObj = obj instanceof Init
     var dom = [].map.call(isSprintObj ? obj.get() : obj, function(el) {
       return el
     })
-    if (isSprintObj) obj.dom = dom
+    if (isSprintObj) {
+      obj.dom = dom
+    }
     return dom
   }
 
@@ -207,7 +212,7 @@ var Sprint;
       default:
         if (selector instanceof Init) return selector
         if (
-          selector instanceof Array ||
+          Array.isArray(selector) ||
           selector instanceof NodeList ||
           selector instanceof HTMLCollection
         ) {
@@ -231,10 +236,9 @@ var Sprint;
       return added
     },
     addClass: function(name) {
-      this.each(function() {
+      return this.each(function() {
         this.classList.add(name)
       })
-      return this
     },
     append: function(content) {
       insertHTML.call(this, "beforeend", content)
@@ -247,22 +251,20 @@ var Sprint;
       var stringValue = typeof value == "string"
 
       if (stringValue || typeof value == "function") {
-        this.each(function(i) {
+        return this.each(function(i) {
           this.setAttribute(
             name, stringValue ? value : value.call(this, i, this.getAttribute(name))
           )
         })
-        return this
       }
 
       if (typeof name == "object") {
         var attributeNames = Object.keys(name)
-        this.each(function(i, el) {
+        return this.each(function(i, el) {
           attributeNames.forEach(function(attribute) {
             el.setAttribute(attribute, name[attribute])
           })
         })
-        return this
       }
 
       if (value == null) {
@@ -317,42 +319,39 @@ var Sprint;
       return Sprint(dom)
     },
     css: function(property, value) {
+      // set (string or function)
       if (value != null) {
-        // set (string or function)
         var isString = typeof value == "string"
-        this.each(function(index) {
+        return this.each(function(index) {
           if (!isString) {
             var style = Sprint(this).css(property)
           }
           setStyle(this, property, isString ? value : value(index, style))
         })
-        return this
       }
-      else {
-        // read
-        if (typeof property == "string") {
-          return getComputedStyle(this.get(0)).getPropertyValue(property)
-        }
-        // read
-        else if (Array.isArray(property)) {
-          var o = {}
-          var styles = getComputedStyle(this.get(0))
-          property.forEach(function(prop) {
-            o[prop] = styles.getPropertyValue(prop) 
-          })
-          return o
-        }
-        // set (property is an object)
-        else {
-          var properties = Object.keys(property)
-          this.each(function(i, el) {
-            properties.forEach(function(prop) {
-              setStyle(el, prop, property[prop])
-            })
-          })
-          return this
-        }
+
+      // read
+      if (typeof property == "string") {
+        return getComputedStyle(this.get(0)).getPropertyValue(property)
       }
+
+      // read
+      if (Array.isArray(property)) {
+        var o = {}
+        var styles = getComputedStyle(this.get(0))
+        property.forEach(function(prop) {
+          o[prop] = styles.getPropertyValue(prop) 
+        })
+        return o
+      }
+
+      // set (property is an object)
+      var properties = Object.keys(property)
+      return this.each(function(i, el) {
+        properties.forEach(function(prop) {
+          setStyle(el, prop, property[prop])
+        })
+      })
     },
     each: function(callback) {
       // callback(index, element) where element == this
@@ -367,10 +366,9 @@ var Sprint;
       return this
     },
     empty: function() {
-      this.each(function() {
+      return this.each(function() {
         this.innerHTML = ""
       })
-      return this
     },
     eq: function(index) {
       return Sprint(this.get(index))
@@ -464,18 +462,16 @@ var Sprint;
             return el.getBoundingClientRect().height 
         }
       }
+
       // set
-      else {
-        var isFunction = typeof value == "function"
-        var stringValue = isFunction ? "" : setValueUnit(value)
-        this.each(function(index) {
-          if (isFunction) {
-            stringValue = setValueUnit(value.call(this, index, Sprint(this).height()))
-          }
-          setStyle(this, "height", stringValue)
-        })
-      }
-      return this
+      var isFunction = typeof value == "function"
+      var stringValue = isFunction ? "" : setValueUnit(value)
+      return this.each(function(index) {
+        if (isFunction) {
+          stringValue = setValueUnit(value.call(this, index, Sprint(this).height()))
+        }
+        setStyle(this, "height", stringValue)
+      })
     },
     html: function(htmlString) {
       if (htmlString == null) {
@@ -487,11 +483,10 @@ var Sprint;
         })
       }
       if (typeof htmlString == "function") {
-        this.each(function(i) {
+        return this.each(function(i) {
           var content = htmlString.call(this, i, this.innerHTML)
           Sprint(this).html(content)
         })
-        return this
       }
     },
     index: function(el) {
@@ -634,7 +629,7 @@ var Sprint;
       return this
     },
     on: function(type, callback) {
-      this.each(function() {
+      return this.each(function() {
         var callbackReference = callback
         if (!this.sprintEventListeners) {
           this.sprintEventListeners = {}
@@ -645,7 +640,6 @@ var Sprint;
         this.sprintEventListeners[type].push(callbackReference)
         this.addEventListener(type, callbackReference)
       })
-      return this
     },
     parent: function(selector) {
       var dom = []
@@ -680,18 +674,16 @@ var Sprint;
     },
     remove: function(selector) {
       toArray(this)
-      this.each(function() {
+      return this.each(function() {
         if (!selector || Sprint(this).is(selector)) {
           this.parentNode.removeChild(this)
         }
       })
-      return this
     },
     removeAttr: function(name) {
-      this.each(function() {
+      return this.each(function() {
         this.removeAttribute(name)
       })
-      return this
     },
     removeClass: function(name) {
       name == null
@@ -739,17 +731,15 @@ var Sprint;
         return texts.length == 1 ? texts[0] : texts
       }
       else {
-        this.each(function() {
+        return this.each(function() {
           this.textContent = content
         })
-        return this
       }
     },
     toggleClass: function(name) {
-      this.each(function() {
+      return this.each(function() {
         this.classList.toggle(name)
       })
-      return this
     },
     val: function(value) {
       if (value == null) {
@@ -827,7 +817,6 @@ var Sprint;
           prt.insertBefore(clone, next)
         })
       }
-
       return this
     }
   }
