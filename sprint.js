@@ -751,6 +751,48 @@ var Sprint;
       })
       return this
     },
+    val: function(value) {
+      if (value == null) {
+        var el = this.get(0)
+        if (el.multiple) {
+          var values = []
+          this.first().children(":checked").each(function() {
+            values.push(this.value)
+          })
+          return values
+        }
+        return el.value
+      }
+
+      if (typeof value == "string") {
+        return this.each(function() {
+          this.value = value
+        })
+      }
+
+      if (Array.isArray(value)) {
+        var self = this
+        return this.each(function() {
+          if (this.multiple) {
+            self.children().each(function() {
+              selectMatchedValues.call(this, "selected")
+            })
+            return
+          }
+          selectMatchedValues.call(this, "checked")
+        })
+      }
+
+      if (typeof value == "function") {
+        return this.each(function(i) {
+          Sprint(this).val(value.call(this, i, this.value))
+        })
+      }
+
+      function selectMatchedValues(attr) {
+        this[attr] = value.indexOf(this.value) < 0 ? false : true
+      }
+    },
     wrap: function(element) {
       if (typeof element == "function") {
         this.each(function() {
