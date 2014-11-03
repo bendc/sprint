@@ -235,9 +235,23 @@ var Sprint;
       added.length = dom.length
       return added
     },
-    addClass: function(name) {
-      return this.each(function() {
-        this.classList.add(name)
+    addClass: function(className) {
+      var isString 
+      var classNames
+      if (typeof className == "string") {
+        isString = true
+        classNames = className.trim().split(" ")
+      }
+      return this.each(function(i, el) {
+        if (!isString) {
+          // .addClass(function)
+          var callbackValue = className.call(el, i, el.className)
+          if (!callbackValue) return
+          classNames = callbackValue.trim().split(" ")
+        }
+        classNames.forEach(function(name) {
+          el.classList.add(name)
+        })
       })
     },
     append: function(content) {
