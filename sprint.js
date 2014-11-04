@@ -675,6 +675,7 @@ var Sprint;
       var self = this
       this.each(function() {
         var prt = this.parentNode
+        if (!prt) return
         if (!selector || self.is(selector, prt)) {
           dom.push(prt)
         }
