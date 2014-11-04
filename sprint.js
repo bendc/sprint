@@ -129,6 +129,37 @@ var Sprint;
     }
   }
 
+  function manipulateClass(method, className, bool) {
+    if (className == null) {
+      if (method == "add") {
+        return this
+      }
+      return this.removeAttr("class")
+    }
+
+    var isString 
+    var classNames
+    if (typeof className == "string") {
+      isString = true
+      classNames = className.trim().split(" ")
+    }
+
+    return this.each(function(i, el) {
+      if (!isString) {
+        // className is a function
+        var callbackValue = className.call(el, i, el.className)
+        if (!callbackValue) return
+        classNames = callbackValue.trim().split(" ")
+      }
+      classNames.forEach(function(name) {
+        if (!name) return
+        bool == null
+          ? el.classList[method](name)
+          : el.classList.toggle(name, bool)
+      })
+    })
+  }
+
   function selectAdjacentSiblings(position, selector) {
     var dom = []
     var self = this
@@ -236,23 +267,7 @@ var Sprint;
       return added
     },
     addClass: function(className) {
-      var isString 
-      var classNames
-      if (typeof className == "string") {
-        isString = true
-        classNames = className.trim().split(" ")
-      }
-      return this.each(function(i, el) {
-        if (!isString) {
-          // .addClass(function)
-          var callbackValue = className.call(el, i, el.className)
-          if (!callbackValue) return
-          classNames = callbackValue.trim().split(" ")
-        }
-        classNames.forEach(function(name) {
-          el.classList.add(name)
-        })
-      })
+      return manipulateClass.call(this, "add", className)
     },
     append: function(content) {
       insertHTML.call(this, "beforeend", content)
@@ -699,13 +714,8 @@ var Sprint;
         this.removeAttribute(name)
       })
     },
-    removeClass: function(name) {
-      name == null
-        ? this.removeAttr("class")
-        : this.each(function() {
-            this.classList.remove(name)
-          })
-      return this
+    removeClass: function(className) {
+      return manipulateClass.call(this, "remove", className)
     },
     siblings: function(selector) {
       var siblings = []
@@ -750,10 +760,8 @@ var Sprint;
         })
       }
     },
-    toggleClass: function(name) {
-      return this.each(function() {
-        this.classList.toggle(name)
-      })
+    toggleClass: function(className, bool) {
+      return manipulateClass.call(this, "toggle", className, bool)
     },
     val: function(value) {
       if (value == null) {
@@ -779,11 +787,11 @@ var Sprint;
         return this.each(function() {
           if (this.multiple) {
             self.children().each(function() {
-              selectMatchedValues.call(this, "selected")
+              selectMatchedValues(this, "selected")
             })
             return
           }
-          selectMatchedValues.call(this, "checked")
+          selectMatchedValues(this, "checked")
         })
       }
 
@@ -793,8 +801,8 @@ var Sprint;
         })
       }
 
-      function selectMatchedValues(attr) {
-        this[attr] = value.indexOf(this.value) < 0 ? false : true
+      function selectMatchedValues(domEl, attr) {
+        domEl[attr] = value.indexOf(domEl.value) < 0 ? false : true
       }
     },
     wrap: function(element) {
