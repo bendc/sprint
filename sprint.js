@@ -283,16 +283,16 @@ var Sprint;
     },
     attr: function(name, value) {
       var stringValue = typeof value == "string"
-
       if (stringValue || typeof value == "function") {
+        toArray(this)
         return this.each(function(i) {
           this.setAttribute(
             name, stringValue ? value : value.call(this, i, this.getAttribute(name))
           )
         })
       }
-
       if (typeof name == "object") {
+        toArray(this)
         var attributeNames = Object.keys(name)
         return this.each(function(i, el) {
           attributeNames.forEach(function(attribute) {
@@ -300,10 +300,7 @@ var Sprint;
           })
         })
       }
-
-      if (value == null) {
-        return this.get(0).getAttribute(name)
-      }
+      return this.get(0).getAttribute(name)
     },
     before: function(content) { 
       insertHTML.call(this, "beforebegin", content)
@@ -840,7 +837,9 @@ var Sprint;
           if (nestedElements) {
             // find most inner child
             var innerWrap = clone.firstChild
-            while (innerWrap.firstChild) innerWrap = innerWrap.firstChild
+            while (innerWrap.firstChild) {
+              innerWrap = innerWrap.firstChild
+            }
             elementPrt = innerWrap
           }
           else {
