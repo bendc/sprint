@@ -13,6 +13,18 @@ var Sprint;
   // When Firefox 34 is out, replace this implementation with:
   // var matchSelector = Element.prototype.matches ? "matches" : "msMatchesSelector"
 
+  var domMethods = {
+    afterbegin: function(el) {
+      this.insertBefore(el, this.firstChild)
+    },
+    beforebegin: function(el) {
+      this.parentNode.insertBefore(el, this) 
+    },
+    beforeend: function(el) {
+      this.appendChild(el) 
+    }
+  }
+
   function addEventListeners(listeners, el) {
     var sprintClone = Sprint(el)
     Object.keys(listeners).forEach(function(key) {
@@ -90,23 +102,10 @@ var Sprint;
     }
     else {
       // DOM node: single existing DOM node, createTextNode() or createElement()
-      // Or collection: $("div"), [element1, element2], document.getElementsByTagName, etc.
-
+      // Or collection: $("div"), [element1, element2], getElementsByTagName, etc.
       var clonedElements = []
       var elementsToInsert = content.nodeType ? [content] : toArray(content)
       position == "afterbegin" && elementsToInsert.reverse()
-
-      var domMethods = {
-        afterbegin: function(clone) {
-          this.insertBefore(clone, this.firstChild)
-        },
-        beforebegin: function(clone) {
-          this.parentNode.insertBefore(clone, this) 
-        },
-        beforeend: function(clone) {
-          this.appendChild(clone) 
-        }
-      }
 
       this.each(function(index) {
         var self = this
@@ -121,7 +120,6 @@ var Sprint;
           if (prt) prt.removeChild(el)
         })
       })
-
       if (content instanceof Init) {
         content.dom = clonedElements
       }
@@ -130,6 +128,8 @@ var Sprint;
   }
 
   function manipulateClass(method, className, bool) {
+    toArray(this)
+
     if (className == null) {
       if (method == "add") {
         return this
@@ -206,15 +206,20 @@ var Sprint;
 
   function toArray(obj) {
     // Converts array-like objects to actual arrays.
-    // If obj is a Sprint object, the DOM reference gets updated.
-    if (Array.isArray(obj)) {
+    // If obj is a Sprint object with an array-like dom, the dom reference gets updated.
+    if (obj instanceof Init) {
+      var sprintDom = obj.get()
+      if (Array.isArray(sprintDom)) {
+        return sprintDom
+      }
+    }
+    else if (Array.isArray(obj)) {
       return obj
     }
-    var isSprintObj = obj instanceof Init
-    var dom = [].map.call(isSprintObj ? obj.get() : obj, function(el) {
+    var dom = [].map.call(sprintDom || obj, function(el) {
       return el
     })
-    if (isSprintObj) {
+    if (sprintDom) {
       obj.dom = dom
     }
     return dom
@@ -710,10 +715,17 @@ var Sprint;
         }
       })
     },
-    removeAttr: function(name) {
-      return this.each(function() {
-        this.removeAttribute(name)
-      })
+    removeAttr: function(attributeName) {
+      if (attributeName) {
+        var attributes = attributeName.trim().split(" ")
+        toArray(this)
+        this.each(function(i, el) {
+          attributes.forEach(function(attr) {
+            el.removeAttribute(attr)
+          })
+        })
+      }
+      return this
     },
     removeClass: function(className) {
       return manipulateClass.call(this, "remove", className)
