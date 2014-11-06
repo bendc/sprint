@@ -37,27 +37,23 @@ var Sprint;
   function duplicateEventListeners(el, clone) {
     // createTextNode()
     if (el.nodeType == 3) return
-  
-    // duplicate event listeners for the parent element
+
+    // Duplicate event listeners for the parent element...
     var listeners = el.sprintEventListeners 
     listeners && addEventListeners(listeners, clone)
 
-    // and its children
-    var elChildren = selectElements("*", el)
-    // cloneChildren is defined later to avoid searching descendants if not needed
-    var cloneChildren 
-    var i = -1
-    var l = elChildren.length
-
-    while (++i < l) {
-      var listeners = elChildren[i].sprintEventListeners
+    // ... and its descendants.
+    // cloneDescendants is defined later to avoid calling selectElements() if not needed
+    var cloneDescendants
+    selectElements("*", el).forEach(function(child, i) {
+      var listeners = child.sprintEventListeners
       if (listeners) {
-        if (!cloneChildren) {
-          cloneChildren = selectElements("*", clone)
+        if (!cloneDescendants) {
+          cloneDescendants = selectElements("*", clone)
         }
-        addEventListeners(listeners, cloneChildren[i])
+        addEventListeners(listeners, cloneDescendants[i])
       }
-    }
+    })
   }
 
   function findDomElements(elementsToFind, returnParent) {
@@ -111,7 +107,7 @@ var Sprint;
         if (Array.isArray(content)) {
           return content
         }
-        // Single existing DOM node, createTextNode(), createElement()
+        // Existing DOM node, createTextNode(), createElement()
         if (content.nodeType) {
           return [content]
         }
@@ -390,7 +386,6 @@ var Sprint;
       var i = -1
       var l = this.length
       var dom = this.dom
-
       while (++i < l) {
         var node = dom[i]
         callback.call(node, i, node) 
@@ -429,12 +424,9 @@ var Sprint;
       if (typeof selector == "string") {
         var dom = []
         this.each(function() {
-          var nodes = selectElements(selector, this)
-          var i = -1
-          var l = nodes.length
-          while (++i < l) {
-            dom.push(nodes[i])
-          }
+          selectElements(selector, this).forEach(function(el) {
+            dom.push(el)
+          })
         })
         return Sprint(dom)
       }
@@ -540,7 +532,9 @@ var Sprint;
       var i = -1
       var l = elements.length
       while (++i < l) {
-        if (elements[i] === toFind) return i
+        if (elements[i] === toFind) {
+          return i
+        }
       }
       return -1
     },
