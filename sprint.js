@@ -101,14 +101,27 @@ var Sprint;
       })
     }
     else {
-      // DOM node: single existing DOM node, createTextNode() or createElement()
-      // Or collection: $("div"), [element1, element2], getElementsByTagName, etc.
+      var isSprintObj = content instanceof Init
       var clonedElements = []
-      var elementsToInsert = content.nodeType ? [content] : toArray(content)
+      var elementsToInsert = (function() {
+        if (isSprintObj) {
+          return content.get()
+        }
+        // [element1, element2]
+        if (Array.isArray(content)) {
+          return content
+        }
+        // Single existing DOM node, createTextNode(), createElement()
+        if (content.nodeType) {
+          return [content]
+        }
+        // getElementsByTagName, getElementsByClassName, querySelectorAll
+        return toArray(content)
+      })()
+      
       position == "afterbegin" && elementsToInsert.reverse()
 
-      this.each(function(index) {
-        var self = this
+      this.each(function(index, self) {
         elementsToInsert.forEach(function(el) {
           var clone = el.cloneNode(true)
           domMethods[position].call(self, clone)
@@ -117,10 +130,10 @@ var Sprint;
 
           if (index > 0) return
           var prt = el.parentNode
-          if (prt) prt.removeChild(el)
+          prt && prt.removeChild(el)
         })
       })
-      if (content instanceof Init) {
+      if (isSprintObj) {
         content.dom = clonedElements
       }
       return clonedElements
@@ -128,8 +141,6 @@ var Sprint;
   }
 
   function manipulateClass(method, className, bool) {
-    toArray(this)
-
     if (className == null) {
       if (method == "add") {
         return this
@@ -177,19 +188,19 @@ var Sprint;
     context = context || d
     // class, id, tag name or universal selector
     if (/^[\#.]?[\w-]+$/.test(selector)) {
-      switch (selector[0]) {
-        case ".":
-          return context.getElementsByClassName(selector.slice(1))
-        case "#":
-          return [context.getElementById(selector.slice(1))]
-        default:
-          if (selector == "body") {
-            return [d.body]
-          }
-          return context.getElementsByTagName(selector)
+      var firstChar = selector[0]
+      if (firstChar == ".") {
+        return toArray(context.getElementsByClassName(selector.slice(1)))
       }
+      if (firstChar == "#") {
+        return [context.getElementById(selector.slice(1))]
+      }
+      if (selector == "body") {
+        return [d.body]
+      }
+      return toArray(context.getElementsByTagName(selector))
     }
-    return context.querySelectorAll(selector)
+    return toArray(context.querySelectorAll(selector))
   }
 
   function setStyle(el, prop, value) {
@@ -205,24 +216,12 @@ var Sprint;
   }
 
   function toArray(obj) {
-    // Converts array-like objects to actual arrays.
-    // If obj is a Sprint object with an array-like dom, the dom reference gets updated.
-    if (obj instanceof Init) {
-      var sprintDom = obj.get()
-      if (Array.isArray(sprintDom)) {
-        return sprintDom
-      }
+    var arr = []
+    var i = obj.length
+    while (i--) {
+      arr[i] = obj[i]
     }
-    else if (Array.isArray(obj)) {
-      return obj
-    }
-    var dom = [].map.call(sprintDom || obj, function(el) {
-      return el
-    })
-    if (sprintDom) {
-      obj.dom = dom
-    }
-    return dom
+    return arr
   }
 
   // constructor
@@ -246,13 +245,17 @@ var Sprint;
         this.on("DOMContentLoaded", selector) 
         break
       default:
-        if (selector instanceof Init) return selector
-        if (
-          Array.isArray(selector) ||
+        if (selector instanceof Init) {
+          return selector
+        }
+        if (Array.isArray(selector)) {
+          this.dom = selector
+        }
+        else if (
           selector instanceof NodeList ||
           selector instanceof HTMLCollection
         ) {
-          this.dom = selector
+          this.dom = toArray(selector)
         }
         else {
           this.dom = [selector]
@@ -264,7 +267,7 @@ var Sprint;
   Init.prototype = {
     add: function(selector) {
       var added = Sprint(selector)
-      var dom = toArray(added)
+      var dom = added.get()
       this.each(function() {
         dom.push(this)
       })
@@ -284,7 +287,6 @@ var Sprint;
     attr: function(name, value) {
       var stringValue = typeof value == "string"
       if (stringValue || typeof value == "function") {
-        toArray(this)
         return this.each(function(i) {
           this.setAttribute(
             name, stringValue ? value : value.call(this, i, this.getAttribute(name))
@@ -292,7 +294,6 @@ var Sprint;
         })
       }
       if (typeof name == "object") {
-        toArray(this)
         var attributeNames = Object.keys(name)
         return this.each(function(i, el) {
           attributeNames.forEach(function(attribute) {
@@ -705,7 +706,6 @@ var Sprint;
       return selectAdjacentSiblings.call(this, "previous", selector)
     },
     remove: function(selector) {
-      toArray(this)
       return this.each(function() {
         if (!selector || Sprint(this).is(selector)) {
           this.parentNode.removeChild(this)
@@ -715,7 +715,6 @@ var Sprint;
     removeAttr: function(attributeName) {
       if (attributeName) {
         var attributes = attributeName.trim().split(" ")
-        toArray(this)
         this.each(function(i, el) {
           attributes.forEach(function(attr) {
             el.removeAttribute(attr)
@@ -822,8 +821,6 @@ var Sprint;
         })
       }
       else {
-        toArray(this)
-
         var outerWrap = Sprint(element).get(0)
         var outerWrapHTML = typeof element == "string" ? element : outerWrap.outerHTML
         var nestedElements = outerWrapHTML.match(/</g).length > 2
