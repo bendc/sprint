@@ -114,7 +114,6 @@ var Sprint;
         // getElementsByTagName, getElementsByClassName, querySelectorAll
         return toArray(content)
       })()
-      
       position == "afterbegin" && elementsToInsert.reverse()
 
       this.each(function(index, self) {
@@ -608,8 +607,9 @@ var Sprint;
     },
     not: function(selector) {
       var filtered = []
+      var self = this
       this.each(function() {
-        Sprint(this).is(selector) || filtered.push(this)
+        self.is(selector, this) || filtered.push(this)
       })
       return Sprint(filtered)
     },
@@ -700,8 +700,9 @@ var Sprint;
       return selectAdjacentSiblings.call(this, "previous", selector)
     },
     remove: function(selector) {
+      var self = this
       return this.each(function() {
-        if (!selector || Sprint(this).is(selector)) {
+        if (!selector || self.is(selector, this)) {
           this.parentNode.removeChild(this)
         }
       })
@@ -722,9 +723,10 @@ var Sprint;
     },
     siblings: function(selector) {
       var siblings = []
+      var self = this
       this.each(function(i, el) {
         Sprint(this).parent().children().each(function() {
-          if (this == el || (selector && !Sprint(this).is(selector))) return
+          if (this == el || (selector && !self.is(selector, this))) return
           siblings.push(this)
         })
       })
