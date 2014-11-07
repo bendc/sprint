@@ -553,7 +553,6 @@ var Sprint;
         }
         return false
       }
-
       if (typeof selector == "object") {
         // Sprint object or DOM element(s)
         var obj
@@ -574,7 +573,6 @@ var Sprint;
         }
         return false
       }
-
       if (typeof selector == "function") {
         while (++i < l) {
           if (selector.call(this, i, this)) {
@@ -606,10 +604,17 @@ var Sprint;
       return selectAdjacentSiblings.call(this, "next", selector)
     },
     not: function(selector) {
+      var isFunc = typeof selector == "function"
       var filtered = []
       var self = this
-      this.each(function() {
-        self.is(selector, this) || filtered.push(this)
+      this.each(function(i) {
+        if (isFunc) {
+          if (selector.call(this, i, this)) return
+        }
+        else {
+          if (self.is(selector, this)) return
+        }
+        filtered.push(this)
       })
       return Sprint(filtered)
     },
