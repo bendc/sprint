@@ -332,12 +332,12 @@ var Sprint;
       })
       return Sprint(cloned)
     },
-    closest: function(selector) {
+    closest: function(selector, context) {
       var dom = []
       var self = this
-      var root = d.documentElement
+      var root = context || d.documentElement
       this.each(function() {
-        var prt = this.parentNode
+        var prt = this
         while (prt != root) {
           if (self.is(selector, prt)) {
             dom.push(prt)
