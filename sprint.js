@@ -221,7 +221,7 @@ var Sprint;
 
   // constructor
 
-  function Init(selector) {
+  function Init(selector, context) {
     switch (typeof selector) {
       case "string":
         if (selector[0] == "<") {
@@ -230,7 +230,12 @@ var Sprint;
           this.dom = [tmp.firstChild]
         }
         else {
-          this.dom = selectElements(selector)
+          if (context && context instanceof Init) {
+            this.dom = context.find(selector).get()
+          }
+          else {
+            this.dom = selectElements(selector, context)
+          }
         }
         this.length = this.dom.length
         break
@@ -854,8 +859,8 @@ var Sprint;
 
   // public
 
-  Sprint = function(selector) {
-    return new Init(selector)
+  Sprint = function(selector, context) {
+    return new Init(selector, context)
   }
 
   if (window.$ == null) {
