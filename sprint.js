@@ -84,54 +84,59 @@ var Sprint;
     return Sprint(dom)
   }
 
-  function insertHTML(position, content) {
-    if (typeof content == "string") {
-      this.each(function() {
-        this.insertAdjacentHTML(position, content)
-      })
-    }
-    else if (typeof content == "function") {
-      this.each(function(index) {
-        var callbackValue = content.call(this, index, this.innerHTML)
-        insertHTML.call(Sprint(this), position, callbackValue)
-      })
-    }
-    else {
-      var isSprintObj = content instanceof Init
-      var clonedElements = []
-      var elementsToInsert = (function() {
-        if (isSprintObj) {
-          return content.get()
-        }
-        // [element1, element2]
-        if (Array.isArray(content)) {
-          return content
-        }
-        // Existing DOM node, createTextNode(), createElement()
-        if (content.nodeType) {
-          return [content]
-        }
-        // getElementsByTagName, getElementsByClassName, querySelectorAll
-        return toArray(content)
-      })()
-      position == "afterbegin" && elementsToInsert.reverse()
-
-      this.each(function(index, self) {
-        elementsToInsert.forEach(function(el) {
-          var clone = el.cloneNode(true)
-          domMethods[position].call(self, clone)
-          duplicateEventListeners(el, clone)
-          clonedElements.push(clone)
-
-          if (index > 0) return
-          var prt = el.parentNode
-          prt && prt.removeChild(el)
+  function insertHTML(position, args) {
+    var i = -1
+    var l = args.length
+    while (++i < l) {
+      var content = args[i]
+      if (typeof content == "string") {
+        this.each(function() {
+          this.insertAdjacentHTML(position, content)
         })
-      })
-      if (isSprintObj) {
-        content.dom = clonedElements
       }
-      return clonedElements
+      else if (typeof content == "function") {
+        this.each(function(index) {
+          var callbackValue = content.call(this, index, this.innerHTML)
+          insertHTML.call(Sprint(this), position, callbackValue)
+        })
+      }
+      else {
+        var isSprintObj = content instanceof Init
+        var clonedElements = []
+        var elementsToInsert = (function() {
+          if (isSprintObj) {
+            return content.get()
+          }
+          // [element1, element2]
+          if (Array.isArray(content)) {
+            return content
+          }
+          // Existing DOM node, createTextNode(), createElement()
+          if (content.nodeType) {
+            return [content]
+          }
+          // getElementsByTagName, getElementsByClassName, querySelectorAll
+          return toArray(content)
+        })()
+        position == "afterbegin" && elementsToInsert.reverse()
+
+        this.each(function(index, self) {
+          elementsToInsert.forEach(function(el) {
+            var clone = el.cloneNode(true)
+            domMethods[position].call(self, clone)
+            duplicateEventListeners(el, clone)
+            clonedElements.push(clone)
+
+            if (index > 0) return
+            var prt = el.parentNode
+            prt && prt.removeChild(el)
+          })
+        })
+        if (isSprintObj) {
+          content.dom = clonedElements
+        }
+        return clonedElements
+      }
     }
   }
 
@@ -277,12 +282,12 @@ var Sprint;
     addClass: function(className) {
       return manipulateClass.call(this, "add", className)
     },
-    append: function(content) {
-      insertHTML.call(this, "beforeend", content)
+    append: function() {
+      insertHTML.call(this, "beforeend", arguments)
       return this
     },
-    appendTo: function(selector) {
-      return Sprint(insertHTML.call(Sprint(selector), "beforeend", this))
+    appendTo: function(target) {
+      return Sprint(insertHTML.call(Sprint(target), "beforeend", [this.get()]))
     },
     attr: function(name, value) {
       var stringValue = typeof value == "string"
@@ -303,8 +308,8 @@ var Sprint;
       }
       return this.get(0).getAttribute(name)
     },
-    before: function(content) { 
-      insertHTML.call(this, "beforebegin", content)
+    before: function() { 
+      insertHTML.call(this, "beforebegin", arguments)
       return this
     },
     children: function(selector) {
@@ -702,8 +707,8 @@ var Sprint;
         left: bounding.first.left - bounding.prt.left
       }
     },
-    prepend: function(content) {
-      insertHTML.call(this, "afterbegin", content)
+    prepend: function() {
+      insertHTML.call(this, "afterbegin", arguments)
       return this
     },
     prev: function(selector) {
