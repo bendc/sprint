@@ -753,17 +753,16 @@ var Sprint;
     },
     text: function(content) {
       if (content == null) {
-        var texts = []
+        var textContents = []
         this.each(function() {
-          texts.push(this.textContent)
+          textContents.push(this.textContent)
         })
-        return texts.length == 1 ? texts[0] : texts
+        return textContents.join("")
       }
-      else {
-        return this.each(function() {
-          this.textContent = content
-        })
-      }
+      var isFunc = typeof content == "function"
+      return this.each(function(i) {
+        this.textContent = isFunc ? content.call(this, i, this.textContent) : content
+      })
     },
     toggleClass: function(className, bool) {
       return manipulateClass.call(this, "toggle", className, bool)
