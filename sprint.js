@@ -135,9 +135,9 @@ var Sprint;
         if (isSprintObj) {
           content.dom = clonedElements
         }
-        return clonedElements
       }
     }
+    return this
   }
 
   function manipulateClass(method, className, bool) {
@@ -283,11 +283,10 @@ var Sprint;
       return manipulateClass.call(this, "add", className)
     },
     append: function() {
-      insertHTML.call(this, "beforeend", arguments)
-      return this
+      return insertHTML.call(this, "beforeend", arguments)
     },
     appendTo: function(target) {
-      return Sprint(insertHTML.call(Sprint(target), "beforeend", [this.get()]))
+      return insertHTML.call(Sprint(target), "beforeend", [this])
     },
     attr: function(name, value) {
       var stringValue = typeof value == "string"
@@ -309,8 +308,7 @@ var Sprint;
       return this.get(0).getAttribute(name)
     },
     before: function() { 
-      insertHTML.call(this, "beforebegin", arguments)
-      return this
+      return insertHTML.call(this, "beforebegin", arguments)
     },
     children: function(selector) {
       var dom = []
@@ -708,8 +706,7 @@ var Sprint;
       }
     },
     prepend: function() {
-      insertHTML.call(this, "afterbegin", arguments)
-      return this
+      return insertHTML.call(this, "afterbegin", arguments)
     },
     prev: function(selector) {
       return selectAdjacentSiblings.call(this, "previous", selector)
@@ -794,13 +791,11 @@ var Sprint;
         }
         return el.value
       }
-
       if (typeof value == "string") {
         return this.each(function() {
           this.value = value
         })
       }
-
       if (Array.isArray(value)) {
         var self = this
         return this.each(function() {
@@ -813,21 +808,19 @@ var Sprint;
           selectMatchedValues(this, "checked")
         })
       }
-
       if (typeof value == "function") {
         return this.each(function(i) {
           Sprint(this).val(value.call(this, i, this.value))
         })
       }
-
       function selectMatchedValues(domEl, attr) {
         domEl[attr] = value.indexOf(domEl.value) < 0 ? false : true
       }
     },
     wrap: function(element) {
       if (typeof element == "function") {
-        this.each(function() {
-          Sprint(this).wrap(element.call(this))
+        this.each(function(i) {
+          Sprint(this).wrap(element.call(this, i))
         })
       }
       else {
