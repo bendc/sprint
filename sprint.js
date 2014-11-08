@@ -122,14 +122,13 @@ var Sprint;
 
         this.each(function(index, self) {
           elementsToInsert.forEach(function(el) {
-            var clone = el.cloneNode(true)
-            domMethods[position].call(self, clone)
-            duplicateEventListeners(el, clone)
-            clonedElements.push(clone)
-
-            if (index > 0) return
-            var prt = el.parentNode
-            prt && prt.removeChild(el)
+            var elementToInsert = el
+            if (index > 0) {
+              elementToInsert = el.cloneNode(true) 
+              duplicateEventListeners(el, elementToInsert)
+            }
+            domMethods[position].call(self, elementToInsert)
+            clonedElements.push(elementToInsert)
           })
         })
         if (isSprintObj) {
