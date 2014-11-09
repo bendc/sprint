@@ -1,18 +1,18 @@
+/*
+ * Sprint JavaScript Library v0.0.0
+ * http://sprintjs.com
+ *
+ * Copyright (c) 2014, 2015 Benjamin De Cock
+ * Released under the MIT license
+ * http://sprintjs.com/license
+ */
+
 var Sprint;
 
 (function() {
   "use strict"
 
   var d = document
-  var matchSelector = "matches"
-  if (!Element.prototype.matches) {
-    matchSelector = Element.prototype.mozMatchesSelector
-                  ? "mozMatchesSelector"
-                  : "msMatchesSelector"
-  }
-  // When Firefox 34 is out, replace this implementation with:
-  // var matchSelector = Element.prototype.matches ? "matches" : "msMatchesSelector"
-
   var domMethods = {
     afterbegin: function(el) {
       this.insertBefore(el, this.firstChild)
@@ -24,6 +24,15 @@ var Sprint;
       this.appendChild(el) 
     }
   }
+  var matchSelector = "matches"
+  if (!Element.prototype.matches) {
+    matchSelector = Element.prototype.mozMatchesSelector
+                  ? "mozMatchesSelector"
+                  : "msMatchesSelector"
+  }
+  // When Firefox 34 is out, replace this implementation with:
+  // var matchSelector = Element.prototype.matches ? "matches" : "msMatchesSelector"
+
 
   function addEventListeners(listeners, el) {
     var sprintClone = Sprint(el)
@@ -133,10 +142,11 @@ var Sprint;
         })
         if (isSprintObj) {
           content.dom = clonedElements
+          content.length = clonedElements.length
         }
+        return clonedElements
       }
     }
-    return this
   }
 
   function manipulateClass(method, className, bool) {
@@ -170,6 +180,31 @@ var Sprint;
     })
   }
 
+  function pxNeeded(cssProperty) {
+    var ignored = [
+      "column-count",
+      "flex-grow",
+      "flex-shrink",
+      "font-weight",
+      "line-height",
+      "opacity",
+      "order",
+      "orphans",
+      "transition",
+      "transition-delay",
+      "transition-duration",
+      "widows",
+      "z-index"
+    ]
+    var i = ignored.length
+    while (i--) {
+      if (ignored[i] == cssProperty) {
+        return false
+      }
+    }
+    return true
+  }
+
   function selectAdjacentSiblings(position, selector) {
     var dom = []
     var self = this
@@ -192,7 +227,8 @@ var Sprint;
         return toArray(context.getElementsByClassName(selector.slice(1)))
       }
       if (firstChar == "#") {
-        return [context.getElementById(selector.slice(1))]
+        var el = context.getElementById(selector.slice(1))
+        return el ? [el] : []
       }
       if (selector == "body") {
         return [d.body]
@@ -202,13 +238,9 @@ var Sprint;
     return toArray(context.querySelectorAll(selector))
   }
 
-  function setStyle(el, prop, value) {
-    el.style[prop] = value ? value : "none"
-  }
-
   function setValueUnit(value) {
     var stringValue = typeof value == "string" ? value : value.toString()
-    if (!stringValue.match(/\D/)) {
+    if (value && !stringValue.match(/\D/)) {
       stringValue += "px"
     }
     return stringValue
@@ -282,10 +314,11 @@ var Sprint;
       return manipulateClass.call(this, "add", className)
     },
     append: function() {
-      return insertHTML.call(this, "beforeend", arguments)
+      insertHTML.call(this, "beforeend", arguments)
+      return this
     },
     appendTo: function(target) {
-      return insertHTML.call(Sprint(target), "beforeend", [this])
+      return Sprint(insertHTML.call(Sprint(target), "beforeend", [this]))
     },
     attr: function(name, value) {
       var stringValue = typeof value == "string"
@@ -307,7 +340,8 @@ var Sprint;
       return this.get(0).getAttribute(name)
     },
     before: function() { 
-      return insertHTML.call(this, "beforebegin", arguments)
+      insertHTML.call(this, "beforebegin", arguments)
+      return this
     },
     children: function(selector) {
       var dom = []
@@ -355,20 +389,18 @@ var Sprint;
     css: function(property, value) {
       // set (string or function)
       if (value != null) {
-        var isString = typeof value == "string"
+        var isFunc = typeof value == "function"
         return this.each(function(index) {
-          if (!isString) {
+          if (isFunc) {
             var style = Sprint(this).css(property)
           }
-          setStyle(this, property, isString ? value : value(index, style))
+          this.style[property] = isFunc ? value(index, style) : setValueUnit(value)
         })
       }
-
       // read
       if (typeof property == "string") {
         return getComputedStyle(this.get(0)).getPropertyValue(property)
       }
-
       // read
       if (Array.isArray(property)) {
         var o = {}
@@ -378,12 +410,11 @@ var Sprint;
         })
         return o
       }
-
       // set (property is an object)
       var properties = Object.keys(property)
       return this.each(function(i, el) {
         properties.forEach(function(prop) {
-          setStyle(el, prop, property[prop])
+          el.style[prop] = setValueUnit(property[prop])
         })
       })
     },
@@ -500,7 +531,7 @@ var Sprint;
         if (isFunction) {
           stringValue = setValueUnit(value.call(this, index, Sprint(this).height()))
         }
-        setStyle(this, "height", stringValue)
+        this.style.height = stringValue
       })
     },
     html: function(htmlString) {
@@ -705,7 +736,8 @@ var Sprint;
       }
     },
     prepend: function() {
-      return insertHTML.call(this, "afterbegin", arguments)
+      insertHTML.call(this, "afterbegin", arguments)
+      return this
     },
     prev: function(selector) {
       return selectAdjacentSiblings.call(this, "previous", selector)
