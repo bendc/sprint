@@ -32,19 +32,57 @@ var Sprint;
   }
   // When Firefox 34 is out, replace this implementation with:
   // var matchSelector = Element.prototype.matches ? "matches" : "msMatchesSelector"
-
+  var noPx = [
+    "animation-delay",
+    "animation-duration",
+    "animation-iteration-count",
+    "column-count",
+    "flex-grow",
+    "flex-shrink",
+    "font-weight",
+    "line-height",
+    "opacity",
+    "order",
+    "orphans",
+    "transition",
+    "transition-delay",
+    "transition-duration",
+    "widows",
+    "z-index"
+  ]
 
   function addEventListeners(listeners, el) {
     var sprintClone = Sprint(el)
-    Object.keys(listeners).forEach(function(key) {
-      listeners[key].forEach(function(callback) {
-        sprintClone.on(key, callback)
-      })
-    })
+    var events = Object.keys(listeners)
+    var eventsLen = events.length
+
+    for (var i = 0; i < eventsLen; i++) {
+      var event = events[i]
+      var handlers = listeners[event]
+      var handlersLen = handlers.length
+
+      for (var j = 0; j < handlersLen; j++) {
+        sprintClone.on(event, handlers[j])
+      }
+    }
+  }
+
+  function addPx(cssProperty, value) {
+    var i = noPx.length
+    while (i--) {
+      if (noPx[i] == cssProperty) {
+        return value
+      }
+    }
+    var stringValue = typeof value == "string" ? value : value.toString()
+    if (value && !stringValue.match(/\D/)) {
+      stringValue += "px"
+    }
+    return stringValue
   }
 
   function duplicateEventListeners(el, clone) {
-    // createTextNode()
+    // Ignore text nodes
     if (el.nodeType == 3) return
 
     // Duplicate event listeners for the parent element...
@@ -52,37 +90,35 @@ var Sprint;
     listeners && addEventListeners(listeners, clone)
 
     // ... and its descendants.
+    var descendants = selectElements("*", el)
+    var descendantsLen = descendants.length
+
     // cloneDescendants is defined later to avoid calling selectElements() if not needed
     var cloneDescendants
-    selectElements("*", el).forEach(function(child, i) {
-      var listeners = child.sprintEventListeners
-      if (listeners) {
-        if (!cloneDescendants) {
-          cloneDescendants = selectElements("*", clone)
-        }
-        addEventListeners(listeners, cloneDescendants[i])
+
+    for (var i = 0; i < descendantsLen; i++) {
+      var listeners = descendants[i].sprintEventListeners
+      if (!listeners) continue
+      if (!cloneDescendants) {
+        cloneDescendants = selectElements("*", clone)
       }
-    })
+      addEventListeners(listeners, cloneDescendants[i])
+    }
   }
 
   function findDomElements(elementsToFind, returnParent) {
-    elementsToFind = elementsToFind instanceof Init
-                   ? elementsToFind.get()
-                   : [elementsToFind]
-    var elementsToFindLength = elementsToFind.length
+    elementsToFind = elementsToFind instanceof Init ? elementsToFind.get() : [elementsToFind]
+    var elementsToFindLen = elementsToFind.length
     var dom = []
-    var i = -1
-    var l = this.length
-    while (++i < l) {
+
+    for (var i = 0; i < this.length; i++) {
       var descendants = selectElements("*", this.get(i))
-      var j = -1
-      var descendantsLength = descendants.length
-      while (++j < descendantsLength) {
-        var k = -1
-        while (++k < elementsToFindLength) {
+      var descendantsLen = descendants.length
+      for (var j = 0; j < descendantsLen; j++) {
+        for (var k = 0; k < elementsToFindLen; k++) {
           if (descendants[j] == elementsToFind[k]) {
             var returnedElement = returnParent ? this.get(i) : elementsToFind[k]
-            if (elementsToFindLength < 2) {
+            if (elementsToFindLen < 2) {
               return Sprint(returnedElement)
             }
             dom.push(returnedElement)
@@ -94,9 +130,8 @@ var Sprint;
   }
 
   function insertHTML(position, args) {
-    var i = -1
-    var l = args.length
-    while (++i < l) {
+    var argsLen = args.length
+    for (var i = 0; i < argsLen; i++) {
       var content = args[i]
       if (typeof content == "string") {
         this.each(function() {
@@ -127,23 +162,30 @@ var Sprint;
           // getElementsByTagName, getElementsByClassName, querySelectorAll
           return toArray(content)
         })()
+        var elementsToInsertLen = elementsToInsert.length
         position == "afterbegin" && elementsToInsert.reverse()
 
-        this.each(function(index, self) {
-          elementsToInsert.forEach(function(el) {
-            var elementToInsert = el
-            if (index > 0) {
-              elementToInsert = el.cloneNode(true) 
-              duplicateEventListeners(el, elementToInsert)
+        this.each(function(index) {
+          for (var i = 0; i < elementsToInsertLen; i++) {
+            var element = elementsToInsert[i]
+            var elementToInsert
+            if (index) {
+              elementToInsert = element.cloneNode(true) 
+              duplicateEventListeners(element, elementToInsert)
             }
-            domMethods[position].call(self, elementToInsert)
+            else {
+              elementToInsert = element
+            }
+            domMethods[position].call(this, elementToInsert)
             clonedElements.push(elementToInsert)
-          })
+          }
         })
+
         if (isSprintObj) {
           content.dom = clonedElements
           content.length = clonedElements.length
         }
+        if (i < argsLen-1) continue
         return clonedElements
       }
     }
@@ -159,9 +201,12 @@ var Sprint;
 
     var isString 
     var classNames
+    var classNamesLen
+
     if (typeof className == "string") {
       isString = true
       classNames = className.trim().split(" ")
+      classNamesLen = classNames.length
     }
 
     return this.each(function(i, el) {
@@ -170,39 +215,16 @@ var Sprint;
         var callbackValue = className.call(el, i, el.className)
         if (!callbackValue) return
         classNames = callbackValue.trim().split(" ")
+        classNamesLen = classNames.length
       }
-      classNames.forEach(function(name) {
-        if (!name) return
+      for (var j = 0; j < classNamesLen; j++) {
+        var name = classNames[j]
+        if (!name) continue
         bool == null
           ? el.classList[method](name)
           : el.classList.toggle(name, bool)
-      })
-    })
-  }
-
-  function pxNeeded(cssProperty) {
-    var ignored = [
-      "column-count",
-      "flex-grow",
-      "flex-shrink",
-      "font-weight",
-      "line-height",
-      "opacity",
-      "order",
-      "orphans",
-      "transition",
-      "transition-delay",
-      "transition-duration",
-      "widows",
-      "z-index"
-    ]
-    var i = ignored.length
-    while (i--) {
-      if (ignored[i] == cssProperty) {
-        return false
       }
-    }
-    return true
+    })
   }
 
   function selectAdjacentSiblings(position, selector) {
@@ -236,14 +258,6 @@ var Sprint;
       return toArray(context.getElementsByTagName(selector))
     }
     return toArray(context.querySelectorAll(selector))
-  }
-
-  function setValueUnit(value) {
-    var stringValue = typeof value == "string" ? value : value.toString()
-    if (value && !stringValue.match(/\D/)) {
-      stringValue += "px"
-    }
-    return stringValue
   }
 
   function toArray(obj) {
@@ -330,11 +344,13 @@ var Sprint;
         })
       }
       if (typeof name == "object") {
-        var attributeNames = Object.keys(name)
-        return this.each(function(i, el) {
-          attributeNames.forEach(function(attribute) {
-            el.setAttribute(attribute, name[attribute])
-          })
+        var attrNames = Object.keys(name)
+        var attrNamesLen = attrNames.length
+        return this.each(function() {
+          for (var i = 0; i < attrNamesLen; i++) {
+            var attribute = attrNames[i]
+            this.setAttribute(attribute, name[attribute])
+          }
         })
       }
       return this.get(0).getAttribute(name)
@@ -348,9 +364,8 @@ var Sprint;
       var self = this
       this.each(function() {
         var nodes = this.children
-        var i = -1
-        var l = nodes.length
-        while (++i < l) {
+        var nodesLen = nodes.length
+        for (var i = 0; i < nodesLen; i++) {
           var node = nodes[i]
           if (!selector || self.is(selector, node)) {
             dom.push(node)
@@ -387,14 +402,28 @@ var Sprint;
       return Sprint(dom)
     },
     css: function(property, value) {
-      // set (string or function)
-      if (value != null) {
-        var isFunc = typeof value == "function"
-        return this.each(function(index) {
-          if (isFunc) {
-            var style = Sprint(this).css(property)
+      var valueType = typeof value
+      var isString = valueType == "string"
+      
+      // set
+      if (isString || valueType == "number") {
+        var isRelativeValue = isString && value.match(/=/)
+        if (isRelativeValue) {
+          var relativeValue = parseInt(value[0] + value.slice(2))
+        }
+        return this.each(function() {
+          if (isRelativeValue) {
+            var current = parseInt(getComputedStyle(this).getPropertyValue(property))
+            var result = current + relativeValue
           }
-          this.style[property] = isFunc ? value(index, style) : setValueUnit(value)
+          this.style[property] = addPx(property, isRelativeValue ? result : value)
+        })
+      }
+      // set
+      if (valueType == "function") {
+        return this.each(function(index) {
+          var oldValue = getComputedStyle(this).getPropertyValue(property)
+          this.style[property] = value.call(this, index, oldValue)
         })
       }
       // read
@@ -405,25 +434,28 @@ var Sprint;
       if (Array.isArray(property)) {
         var o = {}
         var styles = getComputedStyle(this.get(0))
-        property.forEach(function(prop) {
+        var propertyLen = property.length
+        for (var i = 0; i < propertyLen; i++) {
+          var prop = property[i]
           o[prop] = styles.getPropertyValue(prop) 
-        })
+        }
         return o
       }
-      // set (property is an object)
+      // set
       var properties = Object.keys(property)
-      return this.each(function(i, el) {
-        properties.forEach(function(prop) {
-          el.style[prop] = setValueUnit(property[prop])
-        })
+      var propertiesLen = properties.length
+      return this.each(function() {
+        for (var i = 0; i < propertiesLen; i++) {
+          var prop = properties[i]
+          this.style[prop] = addPx(prop, property[prop])
+        }
       })
     },
     each: function(callback) {
       // callback(index, element) where element == this
-      var i = -1
-      var l = this.length
       var dom = this.dom
-      while (++i < l) {
+      var len = this.length
+      for (var i = 0; i < len; i++) {
         var node = dom[i]
         callback.call(node, i, node) 
       }
@@ -461,9 +493,11 @@ var Sprint;
       if (typeof selector == "string") {
         var dom = []
         this.each(function() {
-          selectElements(selector, this).forEach(function(el) {
-            dom.push(el)
-          })
+          var elements = selectElements(selector, this)
+          var elementsLen = elements.length
+          for (var i = 0; i < elementsLen; i++) {
+            dom.push(elements[i])
+          }
         })
         return Sprint(dom)
       }
@@ -497,13 +531,13 @@ var Sprint;
       return findDomElements.call(this, selector, true)
     },
     hasClass: function(name) {
-      var classFound = false
-      this.each(function() {
-        if (!classFound && this.classList.contains(name)) {
-          classFound = true
+      var i = this.length
+      while (i--) {
+        if (this.get(i).classList.contains(name)) {
+          return true
         }
-      })
-      return classFound
+      }
+      return false
     },
     height: function(value) {
       // read
@@ -526,10 +560,10 @@ var Sprint;
 
       // set
       var isFunction = typeof value == "function"
-      var stringValue = isFunction ? "" : setValueUnit(value)
+      var stringValue = isFunction ? "" : addPx("height", value)
       return this.each(function(index) {
         if (isFunction) {
-          stringValue = setValueUnit(value.call(this, index, Sprint(this).height()))
+          stringValue = addPx("height", value.call(this, index, Sprint(this).height()))
         }
         this.style.height = stringValue
       })
@@ -566,10 +600,9 @@ var Sprint;
         sprintElements = this
       }
       var elements = sprintElements.get()
-      var i = -1
-      var l = elements.length
-      while (++i < l) {
-        if (elements[i] === toFind) {
+      var i = elements.length
+      while (i--) {
+        if (elements[i] == toFind) {
           return i
         }
       }
@@ -578,13 +611,11 @@ var Sprint;
     is: function(selector, element) {
       // element is undocumented, internal-use only.
       // It gives better perfs as it prevents the creation of many objects in internal methods.
-
       var set = element ? [element] : this.get()
-      var i = -1
-      var l = set.length
+      var setLen = set.length
 
       if (typeof selector == "string") {
-        while (++i < l) {
+        for (var i = 0; i < setLen; i++) {
           if (set[i][matchSelector](selector)) {
             return true
           }
@@ -600,10 +631,9 @@ var Sprint;
         else {
           obj = selector.length ? selector : [selector]
         }
-        var objLength = obj.length
-        while (++i < l) {
-          var j = -1
-          while (++j < objLength) {
+        var objLen = obj.length
+        for (var i = 0; i < setLen; i++) {
+          for (var j = 0; j < objLen; j++) {
             if (set[i] === obj[j]) {
               return true
             }
@@ -612,7 +642,7 @@ var Sprint;
         return false
       }
       if (typeof selector == "function") {
-        while (++i < l) {
+        for (var i = 0; i < setLen; i++) {
           if (selector.call(this, i, this)) {
             return true
           }
@@ -628,9 +658,10 @@ var Sprint;
       this.each(function(i) {
         var val = callback.call(this, i, this)
         if (Array.isArray(val)) {
-          val.forEach(function(el) {
-            val == null || values.push(el)
-          })
+          var len = val.length
+          for (var j = 0; j < len; j++) {
+            values.push(val[j])
+          }
         }
         else {
           val == null || values.push(val)
@@ -660,42 +691,85 @@ var Sprint;
       switch (arguments.length) {
         // .off()
         case 0:
-          this.each(function(i, el) {
+          return this.each(function() {
             if (!this.sprintEventListeners) return
-            Object.keys(this.sprintEventListeners).forEach(function(key) {
-              el.sprintEventListeners[key].forEach(function(callbackReference) {
-                el.removeEventListener(key, callbackReference) 
-              })
-            }) 
+            var events = Object.keys(this.sprintEventListeners)
+            var eventsLen = events.length
+
+            for (var i = 0; i < eventsLen; i++) {
+              var event = events[i]
+              var handlers = this.sprintEventListeners[event]
+              var handlersLen = handlers.length
+
+              for (var j = 0; j < handlersLen; j++) {
+                this.removeEventListener(event, handlers[j])
+              }
+            }
             this.sprintEventListeners = {}
           })
-          break
 
-        // .off("click")
+        // .off(event)
         case 1:
-          this.each(function(i, el) {
+          return this.each(function() {
             if (!this.sprintEventListeners) return
-            this.sprintEventListeners[type].forEach(function(callbackReference) {
-              el.removeEventListener(type, callbackReference) 
-            }) 
+            var handlers = this.sprintEventListeners[type]
+            var handlersLen = handlers.length
+
+            for (var i = 0; i < handlersLen; i++) {
+              this.removeEventListener(type, handlers[i]) 
+            }
             this.sprintEventListeners[type] = []
           })
-          break
 
-        // .off("click", handler)
+        // .off(event, handler)
         case 2:
-          this.each(function() {
+          return this.each(function() {
             if (!this.sprintEventListeners) return
             var updatedSprintEventListeners = []
-            this.sprintEventListeners[type].forEach(function(callbackReference) {
-              callback != callbackReference && updatedSprintEventListeners.push(callbackReference)
-            }) 
+            var handlers = this.sprintEventListeners[type]
+            var handlersLen = handlers.length
+            
+            for (var i = 0; i < handlersLen; i++) {
+              var handler = handlers[i]
+              callback != handler && updatedSprintEventListeners.push(handler)
+            }
+
             this.removeEventListener(type, callback) 
             this.sprintEventListeners[type] = updatedSprintEventListeners
           })
-          break
       }
-      return this
+    },
+    offset: function(coordinates) {
+      if (!coordinates) {
+        var pos = this.get(0).getBoundingClientRect()
+        return {
+          top: pos.top,
+          left: pos.left
+        }
+      }
+      if (typeof coordinates == "object") {
+        return this.each(function() {
+          var $this = Sprint(this)
+          $this.css("position") == "static"
+            ? $this.css("position", "relative")
+            : $this.css({
+              top: 0,
+              left: 0
+            })
+          var pos = $this.offset() 
+          $this.css({
+            top: coordinates.top - pos.top + "px",
+            left: coordinates.left - pos.left + "px"
+          })
+        })
+      }
+      if (typeof coordinates == "function") {
+        return this.each(function(i) {
+          var $this = Sprint(this)
+          var posObj = coordinates.call(this, i, $this.offset())
+          $this.offset(posObj)
+        })
+      }
     },
     on: function(type, callback) {
       return this.each(function() {
@@ -723,16 +797,13 @@ var Sprint;
       return Sprint(dom)
     },
     position: function() {
-      var bounding = {
-        first: getBounding(this.get(0)),
-        prt: getBounding(this.first().parent().get(0))
-      }
-      function getBounding(el) {
-        return el == d.body ? { top: 0, left: 0 } : el.getBoundingClientRect()
+      var pos = {
+        first: this.offset(),
+        prt: this.parent().offset()
       }
       return {
-        top: bounding.first.top - bounding.prt.top,
-        left: bounding.first.left - bounding.prt.left
+        top: pos.first.top - pos.prt.top,
+        left: pos.first.left - pos.prt.left
       }
     },
     prepend: function() {
@@ -753,10 +824,11 @@ var Sprint;
     removeAttr: function(attributeName) {
       if (attributeName) {
         var attributes = attributeName.trim().split(" ")
-        this.each(function(i, el) {
-          attributes.forEach(function(attr) {
-            el.removeAttribute(attr)
-          })
+        var attributesLen = attributes.length
+        this.each(function() {
+          for (var i = 0; i < attributesLen; i++) {
+            this.removeAttribute(attributes[i])
+          }
         })
       }
       return this
