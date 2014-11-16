@@ -353,7 +353,14 @@ var Sprint;
           }
         })
       }
-      return this.get(0).getAttribute(name)
+      var attrValue = this.get(0).getAttribute(name)
+      if (attrValue == null) {
+        return undefined
+      }
+      if (!attrValue) {
+        return name
+      }
+      return attrValue
     },
     before: function() { 
       insertHTML.call(this, "beforebegin", arguments)
@@ -773,15 +780,14 @@ var Sprint;
     },
     on: function(type, callback) {
       return this.each(function() {
-        var callbackReference = callback
         if (!this.sprintEventListeners) {
           this.sprintEventListeners = {}
         }
         if (!this.sprintEventListeners[type]) {
           this.sprintEventListeners[type] = []
         }
-        this.sprintEventListeners[type].push(callbackReference)
-        this.addEventListener(type, callbackReference)
+        this.sprintEventListeners[type].push(callback)
+        this.addEventListener(type, callback)
       })
     },
     parent: function(selector) {
@@ -805,6 +811,25 @@ var Sprint;
         top: pos.first.top - pos.prt.top,
         left: pos.first.left - pos.prt.left
       }
+    },
+    prop: function(propertyName, value) {
+      if (typeof propertyName == "object") {
+        var props = Object.keys(propertyName) 
+        var propsLen = props.length
+        return this.each(function() {
+          for (var i = 0; i < propsLen; i++) {
+            var prop = props[i]
+            this[prop] = propertyName[prop]
+          }
+        })
+      }
+      if (value == null) {
+        return this.get(0)[propertyName]
+      }
+      var isFunc = typeof value == "function"
+      return this.each(function(i) {
+        this[propertyName] = isFunc ? value.call(this, i, this[propertyName]) : value
+      })
     },
     prepend: function() {
       insertHTML.call(this, "afterbegin", arguments)
@@ -835,6 +860,19 @@ var Sprint;
     },
     removeClass: function(className) {
       return manipulateClass.call(this, "remove", className)
+    },
+    removeProp: function(propertyName) {
+      return this.each(function() {
+        this[propertyName] = undefined 
+      })
+    },
+    replaceWith: function(newContent) {
+      if (typeof newContent == "function") {
+        return this.each(function(i) {
+          Sprint(this).replaceWith(newContent.call(this, i, this))
+        })
+      }
+      return this.before(newContent).remove()
     },
     siblings: function(selector) {
       var siblings = []
