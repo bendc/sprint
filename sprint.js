@@ -401,9 +401,7 @@ var Sprint;
             dom.push(prt)
             break
           }
-          else {
-            prt = prt.parentNode
-          }
+          prt = prt.parentNode
         }
       })
       return Sprint(dom)
@@ -958,41 +956,37 @@ var Sprint;
         domEl[attr] = value.indexOf(domEl.value) < 0 ? false : true
       }
     },
-    wrap: function(element) {
-      if (typeof element == "function") {
-        this.each(function(i) {
-          Sprint(this).wrap(element.call(this, i))
+    wrap: function(wrappingElement) {
+      if (typeof wrappingElement == "function") {
+        return this.each(function(i) {
+          Sprint(this).wrap(wrappingElement.call(this, i))
         })
       }
-      else {
-        var outerWrap = Sprint(element).get(0)
-        var outerWrapHTML = typeof element == "string" ? element : outerWrap.outerHTML
-        var nestedElements = outerWrapHTML.match(/</g).length > 2
 
-        this.each(function() {
-          var clone = outerWrap.cloneNode(true)
-          var prt = this.parentNode
-          var next = this.nextSibling
-          var elementPrt
+      var wrap = Sprint(wrappingElement).get(0)
+      var wrapDescendants = selectElements("*", wrap)
+      var wrapDescendantsLen = wrapDescendants.length
 
-          if (nestedElements) {
-            // find most inner child
-            var innerWrap = clone.firstChild
-            while (innerWrap.firstChild) {
-              innerWrap = innerWrap.firstChild
-            }
-            elementPrt = innerWrap
-          }
-          else {
-            elementPrt = clone
-          }
-
-          duplicateEventListeners(outerWrap, clone)
-          elementPrt.appendChild(this)
-          prt.insertBefore(clone, next)
-        })
+      if (wrapDescendantsLen) {
+        for (var i = 0; i < wrapDescendantsLen; i++) {
+          if (wrapDescendants[i].children.length) continue
+          var innerWrapIndex = i
+          break
+        }
       }
-      return this
+
+      return this.each(function() {
+        var prt = this.parentNode
+        var next = this.nextSibling
+        var clone = wrap.cloneNode(true)
+        var innerWrap = innerWrapIndex == null
+          ? clone
+          : selectElements("*", clone)[innerWrapIndex]
+
+        duplicateEventListeners(wrap, clone)
+        innerWrap.appendChild(this)
+        prt.insertBefore(clone, next)
+      })
     }
   }
 
