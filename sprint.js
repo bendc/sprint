@@ -987,6 +987,26 @@ var Sprint;
         innerWrap.appendChild(this)
         prt.insertBefore(clone, next)
       })
+    },
+    wrapAll: function(wrappingElement) {
+      if (typeof wrappingElement == "function") {
+        this.wrap(wrappingElement)
+      }
+      else {
+        var first = this.get(0)
+        var prt = first.parentNode
+        var next = first.nextSibling
+        var wrap = Sprint(wrappingElement).clone(true).get(0)
+        var innerWrap = wrap
+        while (innerWrap.firstChild) {
+          innerWrap = innerWrap.firstChild
+        }
+        this.each(function() {
+          innerWrap.appendChild(this)
+        })
+        prt.insertBefore(wrap, next)
+      }
+      return this
     }
   }
 
