@@ -18,20 +18,26 @@ var Sprint;
       this.insertBefore(el, this.firstChild)
     },
     beforebegin: function(el) {
-      this.parentNode.insertBefore(el, this) 
+      this.parentNode.insertBefore(el, this)
     },
     beforeend: function(el) {
-      this.appendChild(el) 
+      this.appendChild(el)
     }
   }
-  var matchSelector = "matches"
-  if (!Element.prototype.matches) {
-    matchSelector = Element.prototype.mozMatchesSelector
-                  ? "mozMatchesSelector"
-                  : "msMatchesSelector"
-  }
-  // When Firefox 34 is out, replace this implementation with:
-  // var matchSelector = Element.prototype.matches ? "matches" : "msMatchesSelector"
+  var matches = (function() {
+    var names = [
+      "mozMatchesSelector",
+      "webkitMatchesSelector",
+      "msMatchesSelector",
+      "matches"
+    ]
+    var i = names.length
+    while (i--) {
+      var name = names[i]
+      if (!Element.prototype[name]) continue
+      return name
+    }
+  })()
   var noPx = [
     "animation-delay",
     "animation-duration",
@@ -86,7 +92,7 @@ var Sprint;
     if (el.nodeType == 3) return
 
     // Duplicate event listeners for the parent element...
-    var listeners = el.sprintEventListeners 
+    var listeners = el.sprintEventListeners
     listeners && addEventListeners(listeners, clone)
 
     // ... and its descendants.
@@ -170,7 +176,7 @@ var Sprint;
             var element = elementsToInsert[i]
             var elementToInsert
             if (index) {
-              elementToInsert = element.cloneNode(true) 
+              elementToInsert = element.cloneNode(true)
               duplicateEventListeners(element, elementToInsert)
             }
             else {
@@ -199,7 +205,7 @@ var Sprint;
       return this.removeAttr("class")
     }
 
-    var isString 
+    var isString
     var classNames
     var classNamesLen
 
@@ -292,7 +298,7 @@ var Sprint;
       case "function":
         this.dom = [d]
         this.length = 1
-        this.on("DOMContentLoaded", selector) 
+        this.on("DOMContentLoaded", selector)
         break
       default:
         if (selector instanceof Init) {
@@ -362,7 +368,7 @@ var Sprint;
       }
       return attrValue
     },
-    before: function() { 
+    before: function() {
       insertHTML.call(this, "beforebegin", arguments)
       return this
     },
@@ -409,7 +415,7 @@ var Sprint;
     css: function(property, value) {
       var valueType = typeof value
       var isString = valueType == "string"
-      
+
       // set
       if (isString || valueType == "number") {
         var isRelativeValue = isString && value.match(/=/)
@@ -442,7 +448,7 @@ var Sprint;
         var propertyLen = property.length
         for (var i = 0; i < propertyLen; i++) {
           var prop = property[i]
-          o[prop] = styles.getPropertyValue(prop) 
+          o[prop] = styles.getPropertyValue(prop)
         }
         return o
       }
@@ -462,7 +468,7 @@ var Sprint;
       var len = this.length
       for (var i = 0; i < len; i++) {
         var node = dom[i]
-        callback.call(node, i, node) 
+        callback.call(node, i, node)
       }
       return this
     },
@@ -559,7 +565,7 @@ var Sprint;
             return window.innerHeight
           // height of an element
           default:
-            return el.getBoundingClientRect().height 
+            return el.getBoundingClientRect().height
         }
       }
 
@@ -621,7 +627,7 @@ var Sprint;
 
       if (typeof selector == "string") {
         for (var i = 0; i < setLen; i++) {
-          if (set[i][matchSelector](selector)) {
+          if (set[i][matches](selector)) {
             return true
           }
         }
@@ -721,7 +727,7 @@ var Sprint;
             var handlersLen = handlers.length
 
             for (var i = 0; i < handlersLen; i++) {
-              this.removeEventListener(type, handlers[i]) 
+              this.removeEventListener(type, handlers[i])
             }
             this.sprintEventListeners[type] = []
           })
@@ -733,13 +739,13 @@ var Sprint;
             var updatedSprintEventListeners = []
             var handlers = this.sprintEventListeners[type]
             var handlersLen = handlers.length
-            
+
             for (var i = 0; i < handlersLen; i++) {
               var handler = handlers[i]
               callback != handler && updatedSprintEventListeners.push(handler)
             }
 
-            this.removeEventListener(type, callback) 
+            this.removeEventListener(type, callback)
             this.sprintEventListeners[type] = updatedSprintEventListeners
           })
       }
@@ -761,7 +767,7 @@ var Sprint;
               top: 0,
               left: 0
             })
-          var pos = $this.offset() 
+          var pos = $this.offset()
           $this.css({
             top: coordinates.top - pos.top + "px",
             left: coordinates.left - pos.left + "px"
@@ -812,7 +818,7 @@ var Sprint;
     },
     prop: function(propertyName, value) {
       if (typeof propertyName == "object") {
-        var props = Object.keys(propertyName) 
+        var props = Object.keys(propertyName)
         var propsLen = props.length
         return this.each(function() {
           for (var i = 0; i < propsLen; i++) {
@@ -861,7 +867,7 @@ var Sprint;
     },
     removeProp: function(propertyName) {
       return this.each(function() {
-        this[propertyName] = undefined 
+        this[propertyName] = undefined
       })
     },
     replaceWith: function(newContent) {
