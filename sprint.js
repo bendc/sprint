@@ -896,6 +896,10 @@ var Sprint;
         this[propertyName] = undefined
       })
     },
+    replaceAll: function(target) {
+      Sprint(target).replaceWith(this)
+      return this
+    },
     replaceWith: function(newContent) {
       if (typeof newContent == "function") {
         return this.each(function(i) {
