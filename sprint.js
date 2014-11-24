@@ -275,6 +275,32 @@ var Sprint;
     return arr
   }
 
+  function wrap(wrappingElement, wrapAll) {
+    if (typeof wrappingElement == "function") {
+      this.each(function(i) {
+        Sprint(this).wrap(wrappingElement.call(this, i))
+      })
+    }
+    else {
+      wrapAll ? callback.call(this) : this.each(callback)
+    }
+    function callback() {
+      var el = wrapAll ? this.get(0) : this
+      var prt = el.parentNode
+      var next = el.nextSibling
+      var wrap = Sprint(wrappingElement).clone(true).get(0)
+      var innerWrap = wrap
+      while (innerWrap.firstChild) {
+        innerWrap = innerWrap.firstChild
+      }
+      wrapAll
+        ? this.each(function() { innerWrap.appendChild(this) })
+        : innerWrap.appendChild(el)
+      prt.insertBefore(wrap, next)
+    }
+    return this
+  }
+
   // constructor
 
   function Init(selector, context) {
@@ -963,56 +989,10 @@ var Sprint;
       }
     },
     wrap: function(wrappingElement) {
-      if (typeof wrappingElement == "function") {
-        return this.each(function(i) {
-          Sprint(this).wrap(wrappingElement.call(this, i))
-        })
-      }
-
-      var wrap = Sprint(wrappingElement).get(0)
-      var wrapDescendants = selectElements("*", wrap)
-      var wrapDescendantsLen = wrapDescendants.length
-
-      if (wrapDescendantsLen) {
-        for (var i = 0; i < wrapDescendantsLen; i++) {
-          if (wrapDescendants[i].children.length) continue
-          var innerWrapIndex = i
-          break
-        }
-      }
-
-      return this.each(function() {
-        var prt = this.parentNode
-        var next = this.nextSibling
-        var clone = wrap.cloneNode(true)
-        var innerWrap = innerWrapIndex == null
-          ? clone
-          : selectElements("*", clone)[innerWrapIndex]
-
-        duplicateEventListeners(wrap, clone)
-        innerWrap.appendChild(this)
-        prt.insertBefore(clone, next)
-      })
+      return wrap.call(this, wrappingElement)
     },
     wrapAll: function(wrappingElement) {
-      if (typeof wrappingElement == "function") {
-        this.wrap(wrappingElement)
-      }
-      else {
-        var first = this.get(0)
-        var prt = first.parentNode
-        var next = first.nextSibling
-        var wrap = Sprint(wrappingElement).clone(true).get(0)
-        var innerWrap = wrap
-        while (innerWrap.firstChild) {
-          innerWrap = innerWrap.firstChild
-        }
-        this.each(function() {
-          innerWrap.appendChild(this)
-        })
-        prt.insertBefore(wrap, next)
-      }
-      return this
+      return wrap.call(this, wrappingElement, true)
     }
   }
 
