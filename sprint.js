@@ -275,28 +275,36 @@ var Sprint;
     return arr
   }
 
-  function wrap(wrappingElement, wrapAll) {
+  function wrap(wrappingElement, variant) {
     if (typeof wrappingElement == "function") {
       this.each(function(i) {
-        Sprint(this).wrap(wrappingElement.call(this, i))
+        Sprint(this)[variant == "inner" ? "wrapInner" : "wrap"](wrappingElement.call(this, i))
       })
     }
     else {
-      wrapAll ? callback.call(this) : this.each(callback)
+      variant == "all" ? callback.call(this) : this.each(callback)
     }
     function callback() {
-      var el = wrapAll ? this.get(0) : this
-      var prt = el.parentNode
-      var next = el.nextSibling
       var wrap = Sprint(wrappingElement).clone(true).get(0)
       var innerWrap = wrap
       while (innerWrap.firstChild) {
         innerWrap = innerWrap.firstChild
       }
-      wrapAll
-        ? this.each(function() { innerWrap.appendChild(this) })
-        : innerWrap.appendChild(el)
-      prt.insertBefore(wrap, next)
+      if (variant == "inner") {
+        while (this.firstChild) {
+          innerWrap.appendChild(this.firstChild)
+        }
+        this.appendChild(wrap)
+      }
+      else {
+        var el = variant == "all" ? this.get(0) : this
+        var prt = el.parentNode
+        var next = el.nextSibling
+        variant == "all"
+          ? this.each(function() { innerWrap.appendChild(this) })
+          : innerWrap.appendChild(el)
+        prt.insertBefore(wrap, next)
+      }
     }
     return this
   }
@@ -996,7 +1004,10 @@ var Sprint;
       return wrap.call(this, wrappingElement)
     },
     wrapAll: function(wrappingElement) {
-      return wrap.call(this, wrappingElement, true)
+      return wrap.call(this, wrappingElement, "all")
+    },
+    wrapInner: function(wrappingElement) {
+      return wrap.call(this, wrappingElement, "inner")
     }
   }
 
