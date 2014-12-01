@@ -17,6 +17,9 @@ var Sprint;
     afterbegin: function(el) {
       this.insertBefore(el, this.firstChild)
     },
+    afterend: function(el) {
+      this.parentNode.insertBefore(el, this.nextSibling)
+    },
     beforebegin: function(el) {
       this.parentNode.insertBefore(el, this)
     },
@@ -137,8 +140,19 @@ var Sprint;
 
   function insertHTML(position, args) {
     var argsLen = args.length
+    var contents = args
+
+    // reverse argument list for afterbegin and afterend
+    if (/after/.test(position)) {
+      contents = []
+      var i = argsLen
+      while (i--) {
+        contents.push(args[i])
+      }
+    }
+
     for (var i = 0; i < argsLen; i++) {
-      var content = args[i]
+      var content = contents[i]
       if (typeof content == "string") {
         this.each(function() {
           this.insertAdjacentHTML(position, content)
@@ -147,7 +161,7 @@ var Sprint;
       else if (typeof content == "function") {
         this.each(function(index) {
           var callbackValue = content.call(this, index, this.innerHTML)
-          insertHTML.call(Sprint(this), position, callbackValue)
+          insertHTML.call(Sprint(this), position, [callbackValue])
         })
       }
       else {
@@ -169,7 +183,10 @@ var Sprint;
           return toArray(content)
         })()
         var elementsToInsertLen = elementsToInsert.length
-        position == "afterbegin" && elementsToInsert.reverse()
+
+        if (/after/.test(position)) {
+          elementsToInsert.reverse()
+        }
 
         this.each(function(index) {
           for (var i = 0; i < elementsToInsertLen; i++) {
@@ -366,6 +383,10 @@ var Sprint;
     },
     addClass: function(className) {
       return manipulateClass.call(this, "add", className)
+    },
+    after: function() {
+      insertHTML.call(this, "afterend", arguments)
+      return this
     },
     append: function() {
       insertHTML.call(this, "beforeend", arguments)
