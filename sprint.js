@@ -143,7 +143,7 @@ var Sprint;
     var contents = args
 
     // reverse argument list for afterbegin and afterend
-    if (/after/.test(position)) {
+    if (argsLen > 1 && /after/.test(position)) {
       contents = []
       var i = argsLen
       while (i--) {
@@ -184,7 +184,7 @@ var Sprint;
         })()
         var elementsToInsertLen = elementsToInsert.length
 
-        if (/after/.test(position)) {
+        if (elementsToInsertLen > 1 && /after/.test(position)) {
           elementsToInsert.reverse()
         }
 
