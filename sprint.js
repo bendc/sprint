@@ -84,7 +84,7 @@ var Sprint;
       }
     }
     var stringValue = typeof value == "string" ? value : value.toString()
-    if (value && !stringValue.match(/\D/)) {
+    if (value && !/\D/.test(stringValue)) {
       stringValue += "px"
     }
     return stringValue
@@ -143,7 +143,7 @@ var Sprint;
     var contents = args
 
     // reverse argument list for afterbegin and afterend
-    if (argsLen > 1 && /after/.test(position)) {
+    if (argsLen > 1 && position.indexOf("after") > -1) {
       contents = []
       var i = argsLen
       while (i--) {
@@ -171,7 +171,7 @@ var Sprint;
           if (isSprintObj) {
             return content.get()
           }
-          // [element1, element2]
+          // [node1, node2]
           if (Array.isArray(content)) {
             return content
           }
@@ -184,11 +184,8 @@ var Sprint;
         })()
         var elementsToInsertLen = elementsToInsert.length
 
-        if (elementsToInsertLen > 1 && /after/.test(position)) {
-          elementsToInsert.reverse()
-        }
-
         this.each(function(index) {
+          var fragment = d.createDocumentFragment()
           for (var i = 0; i < elementsToInsertLen; i++) {
             var element = elementsToInsert[i]
             var elementToInsert
@@ -199,9 +196,10 @@ var Sprint;
             else {
               elementToInsert = element
             }
-            domMethods[position].call(this, elementToInsert)
+            fragment.appendChild(elementToInsert)
             clonedElements.push(elementToInsert)
           }
+          domMethods[position].call(this, fragment)
         })
 
         if (isSprintObj) {
@@ -473,7 +471,7 @@ var Sprint;
 
       // set
       if (isString || valueType == "number") {
-        var isRelativeValue = isString && value.match(/=/)
+        var isRelativeValue = isString && /=/.test(value)
         if (isRelativeValue) {
           var relativeValue = parseInt(value[0] + value.slice(2))
         }
