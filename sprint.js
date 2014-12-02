@@ -676,6 +676,10 @@ var Sprint;
       Sprint(target).after(this)
       return this
     },
+    insertBefore: function(target) {
+      Sprint(target).before(this)
+      return this
+    },
     is: function(selector, element) {
       // element is undocumented, internal-use only.
       // It gives better perfs as it prevents the creation of many objects in internal methods.
