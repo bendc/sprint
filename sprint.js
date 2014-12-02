@@ -184,8 +184,11 @@ var Sprint;
         })()
         var elementsToInsertLen = elementsToInsert.length
 
+        if (elementsToInsertLen > 1 && position.indexOf("after") > -1) {
+          elementsToInsert.reverse()
+        }
+
         this.each(function(index) {
-          var fragment = d.createDocumentFragment()
           for (var i = 0; i < elementsToInsertLen; i++) {
             var element = elementsToInsert[i]
             var elementToInsert
@@ -196,10 +199,9 @@ var Sprint;
             else {
               elementToInsert = element
             }
-            fragment.appendChild(elementToInsert)
+            domMethods[position].call(this, elementToInsert)
             clonedElements.push(elementToInsert)
           }
-          domMethods[position].call(this, fragment)
         })
 
         if (isSprintObj) {
