@@ -845,6 +845,20 @@ var Sprint;
         })
       }
     },
+    offsetParent: function() {
+      var dom = []
+      this.each(function() {
+        var prt = this
+        while (prt != d.documentElement) {
+          prt = prt.parentNode
+          if (getComputedStyle(prt).getPropertyValue("position") != "static") {
+            dom.push(prt)
+            break
+          }
+        }
+      })
+      return Sprint(dom)
+    },
     on: function(type, callback) {
       return this.each(function() {
         if (!this.sprintEventListeners) {
