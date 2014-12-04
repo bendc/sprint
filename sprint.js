@@ -1,5 +1,5 @@
 /*
- * Sprint JavaScript Library v0.0.0
+ * Sprint JavaScript Library v0.5.0
  * http://sprintjs.com
  *
  * Copyright (c) 2014, 2015 Benjamin De Cock
@@ -59,6 +59,7 @@ var Sprint;
     "widows",
     "z-index"
   ]
+  var root = d.documentElement
 
   function addEventListeners(listeners, el) {
     var sprintClone = Sprint(el)
@@ -454,14 +455,13 @@ var Sprint;
     closest: function(selector, context) {
       var dom = []
       var self = this
-      var root = context || d.documentElement
+      var ancestor = context || root
       this.each(function() {
         var prt = this
-        while (prt != root) {
-          if (self.is(selector, prt)) {
-            dom.push(prt)
-            break
-          }
+        while (prt) {
+          var found = self.is(selector, prt)
+          found && dom.push(prt)
+          if (found || prt == ancestor) break
           prt = prt.parentNode
         }
       })
@@ -612,7 +612,7 @@ var Sprint;
         switch (el) {
           // height of HTML document
           case d:
-            var offset = d.documentElement.offsetHeight
+            var offset = root.offsetHeight
             var inner = window.innerHeight
             return offset > inner ? offset : inner
           // height of the viewport
@@ -849,13 +849,16 @@ var Sprint;
       var dom = []
       this.each(function() {
         var prt = this
-        while (prt != d.documentElement) {
+        while (prt != root) {
           prt = prt.parentNode
-          if (getComputedStyle(prt).getPropertyValue("position") != "static") {
+          var pos = getComputedStyle(prt).getPropertyValue("position")
+          if (!pos) break
+          if (pos != "static") {
             dom.push(prt)
-            break
+            return
           }
         }
+        dom.push(root)
       })
       return Sprint(dom)
     },
@@ -872,6 +875,18 @@ var Sprint;
       })
     },
     parent: function(selector) {
+      var dom = []
+      var self = this
+      this.each(function() {
+        var prt = this.parentNode
+        if (!prt) return
+        if (!selector || self.is(selector, prt)) {
+          dom.push(prt)
+        }
+      })
+      return Sprint(dom)
+    },
+    parents: function(selector) {
       var dom = []
       var self = this
       this.each(function() {
