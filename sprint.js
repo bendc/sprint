@@ -335,7 +335,7 @@ var Sprint;
         if (selector[0] == "<") {
           var tmp = d.createElement("div")
           tmp.innerHTML = selector.trim()
-          this.dom = [tmp.firstChild]
+          this.dom = [tmp.firstChild.cloneNode(true)]
         }
         else {
           if (context && context instanceof Init) {
@@ -875,25 +875,33 @@ var Sprint;
       })
     },
     parent: function(selector) {
-      var dom = []
-      var self = this
-      this.each(function() {
-        var prt = this.parentNode
-        if (!prt) return
-        if (!selector || self.is(selector, prt)) {
-          dom.push(prt)
-        }
-      })
-      return Sprint(dom)
+      return this.parents(selector, 1)
     },
-    parents: function(selector) {
+    parents: function(selector, howMany) {
+      /* Differences with jQuery:
+       * 1. howMany param. Undocumented, internally used for parent().
+       * 2. $("html").parent() and $("html").parents() return an empty set.
+       * 3. The returned set won't be in reverse order.
+       */
       var dom = []
+      var domLen = 0
       var self = this
       this.each(function() {
+        var ancestorLevel = 0
         var prt = this.parentNode
-        if (!prt) return
-        if (!selector || self.is(selector, prt)) {
-          dom.push(prt)
+        while (prt && prt != d) {
+          if (!selector || self.is(selector, prt)) {
+            var isAlreadyInSet
+            for (var i = 0; i < domLen; i++) {
+              if (dom[i] != prt) continue
+              isAlreadyInSet = true
+              break
+            }
+            isAlreadyInSet || dom.push(prt)
+            domLen++
+          }
+          if (howMany && ++ancestorLevel == howMany) break
+          prt = prt.parentNode
         }
       })
       return Sprint(dom)
