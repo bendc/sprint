@@ -116,6 +116,35 @@ var Sprint;
     }
   }
 
+  function findAncestors(startAtParent, limitToParent, limitToFirstMatch, selector, context) {
+    var dom = []
+    var domLen = 0
+    var self = this
+
+    this.each(function() {
+      var prt = startAtParent ? this.parentElement : this
+      while (prt) {
+        if (context && context == prt) break
+        if (!selector || self.is(selector, prt)) {
+          var isAlreadyInSet
+          for (var i = 0; i < domLen; i++) {
+            if (dom[i] != prt) continue
+            isAlreadyInSet = true
+            break
+          }
+          if (!isAlreadyInSet) {
+            dom.push(prt)
+            domLen++
+            if (limitToFirstMatch) break
+          }
+          if (limitToParent) break
+        }
+        prt = prt.parentElement
+      }
+    })
+    return Sprint(dom)
+  }
+
   function findDomElements(elementsToFind, returnParent) {
     elementsToFind = elementsToFind instanceof Init ? elementsToFind.get() : [elementsToFind]
     var elementsToFindLen = elementsToFind.length
@@ -453,19 +482,7 @@ var Sprint;
       return Sprint(cloned)
     },
     closest: function(selector, context) {
-      var dom = []
-      var self = this
-      var ancestor = context || root
-      this.each(function() {
-        var prt = this
-        while (prt) {
-          var found = self.is(selector, prt)
-          found && dom.push(prt)
-          if (found || prt == ancestor) break
-          prt = prt.parentNode
-        }
-      })
-      return Sprint(dom)
+      return findAncestors.call(this, false, false, true, selector, context)
     },
     css: function(property, value) {
       var valueType = typeof value
@@ -875,36 +892,14 @@ var Sprint;
       })
     },
     parent: function(selector) {
-      return this.parents(selector, 1)
+      return findAncestors.call(this, true, true, false, selector)
     },
-    parents: function(selector, howMany) {
+    parents: function(selector) {
       /* Differences with jQuery:
-       * 1. howMany param. Undocumented, internally used for parent().
-       * 2. $("html").parent() and $("html").parents() return an empty set.
-       * 3. The returned set won't be in reverse order.
+       * 1. $("html").parent() and $("html").parents() return an empty set.
+       * 2. The returned set won't be in reverse order.
        */
-      var dom = []
-      var domLen = 0
-      var self = this
-      this.each(function() {
-        var ancestorLevel = 0
-        var prt = this.parentNode
-        while (prt && prt != d) {
-          if (!selector || self.is(selector, prt)) {
-            var isAlreadyInSet
-            for (var i = 0; i < domLen; i++) {
-              if (dom[i] != prt) continue
-              isAlreadyInSet = true
-              break
-            }
-            isAlreadyInSet || dom.push(prt)
-            domLen++
-          }
-          if (howMany && ++ancestorLevel == howMany) break
-          prt = prt.parentNode
-        }
-      })
-      return Sprint(dom)
+      return findAncestors.call(this, true, false, false, selector)
     },
     position: function() {
       var pos = {
