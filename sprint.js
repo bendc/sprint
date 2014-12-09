@@ -1,5 +1,5 @@
 /*
- * Sprint JavaScript Library v0.5.0
+ * Sprint JavaScript Library v0.5.1
  * http://sprintjs.com
  *
  * Copyright (c) 2014, 2015 Benjamin De Cock
@@ -118,31 +118,20 @@ var Sprint;
 
   function findAncestors(startAtParent, limitToParent, limitToFirstMatch, selector, context) {
     var dom = []
-    var domLen = 0
     var self = this
-
     this.each(function() {
       var prt = startAtParent ? this.parentElement : this
       while (prt) {
         if (context && context == prt) break
         if (!selector || self.is(selector, prt)) {
-          var isAlreadyInSet
-          for (var i = 0; i < domLen; i++) {
-            if (dom[i] != prt) continue
-            isAlreadyInSet = true
-            break
-          }
-          if (!isAlreadyInSet) {
-            dom.push(prt)
-            domLen++
-            if (limitToFirstMatch) break
-          }
-          if (limitToParent) break
+          dom.push(prt)
+          if (limitToFirstMatch) break
         }
+        if (limitToParent) break
         prt = prt.parentElement
       }
     })
-    return Sprint(dom)
+    return Sprint(removeDuplicates(dom))
   }
 
   function findDomElements(elementsToFind, returnParent) {
@@ -165,7 +154,7 @@ var Sprint;
         }
       }
     }
-    return Sprint(dom)
+    return Sprint(removeDuplicates(dom))
   }
 
   function insertHTML(position, args) {
@@ -278,6 +267,27 @@ var Sprint;
           : el.classList.toggle(name, bool)
       }
     })
+  }
+
+  function removeDuplicates(arr) {
+    var cleanDom = []
+    var cleanDomLen = 0
+    var arrLen = arr.length
+
+    for (var i = 0; i < arrLen; i++) {
+      var el = arr[i]
+      var duplicate = false
+
+      for (var j = 0; j < cleanDomLen; j++) {
+        if (el !== cleanDom[j]) continue
+        duplicate = true
+        break
+      }
+
+      if (duplicate) continue
+      cleanDom[cleanDomLen++] = el
+    }
+    return cleanDom
   }
 
   function selectAdjacentSiblings(position, selector) {
@@ -582,7 +592,7 @@ var Sprint;
             dom.push(elements[i])
           }
         })
-        return Sprint(dom)
+        return Sprint(removeDuplicates(dom))
       }
 
       // .find(element)
