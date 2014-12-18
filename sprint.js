@@ -1,5 +1,5 @@
 /*
- * Sprint JavaScript Library v0.5.1
+ * Sprint JavaScript Library v0.5.2
  * http://sprintjs.com
  *
  * Copyright (c) 2014, 2015 Benjamin De Cock
@@ -956,6 +956,9 @@ var Sprint;
     prepend: function() {
       insertHTML.call(this, "afterbegin", arguments)
       return this
+    },
+    prependTo: function(target) {
+      return Sprint(insertHTML.call(Sprint(target), "afterbegin", [this]))
     },
     prev: function(selector) {
       return selectAdjacentSiblings.call(this, "previous", selector)
