@@ -374,6 +374,7 @@ var Sprint;
         if (selector[0] == "<") {
           var tmp = d.createElement("div")
           tmp.innerHTML = selector.trim()
+          // cloneNode prevents the div to be listed as a parent of nodes not in the DOM
           this.dom = [tmp.firstChild.cloneNode(true)]
         }
         else {
@@ -436,11 +437,11 @@ var Sprint;
       return Sprint(insertHTML.call(Sprint(target), "beforeend", [this]))
     },
     attr: function(name, value) {
-      var stringValue = typeof value == "string"
-      if (stringValue || typeof value == "function") {
+      var isFunc = typeof value == "function"
+      if (typeof value == "string" || typeof value == "number" || isFunc ) {
         return this.each(function(i) {
           this.setAttribute(
-            name, stringValue ? value : value.call(this, i, this.getAttribute(name))
+            name, isFunc ? value.call(this, i, this.getAttribute(name)) : value
           )
         })
       }
