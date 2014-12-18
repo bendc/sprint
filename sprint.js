@@ -455,7 +455,9 @@ var Sprint;
           }
         })
       }
-      var attrValue = this.get(0).getAttribute(name)
+      var el = this.get(0)
+      if (!el) return
+      var attrValue = el.getAttribute(name)
       if (attrValue == null) {
         return undefined
       }
@@ -522,7 +524,9 @@ var Sprint;
       }
       // read
       if (typeof property == "string") {
-        return getComputedStyle(this.get(0)).getPropertyValue(property)
+        var el = this.get(0)
+        if (!el) return
+        return getComputedStyle(el).getPropertyValue(property)
       }
       // read
       if (Array.isArray(property)) {
@@ -637,6 +641,7 @@ var Sprint;
       // read
       if (value == null) {
         var el = this.get(0)
+        if (!el) return
         switch (el) {
           // height of HTML document
           case d:
@@ -664,7 +669,9 @@ var Sprint;
     },
     html: function(htmlString) {
       if (htmlString == null) {
-        return this.get(0).innerHTML
+        var el = this.get(0)
+        if (!el) return
+        return el.innerHTML
       }
       if (typeof htmlString == "string") {
         return this.each(function() {
@@ -679,6 +686,7 @@ var Sprint;
       }
     },
     index: function(el) {
+      if (!this.length) return
       var toFind
       var sprintElements
       if (!el) {
@@ -843,7 +851,9 @@ var Sprint;
     },
     offset: function(coordinates) {
       if (!coordinates) {
-        var pos = this.get(0).getBoundingClientRect()
+        var el = this.get(0)
+        if (!el) return
+        var pos = el.getBoundingClientRect()
         return {
           top: pos.top,
           left: pos.left
@@ -934,7 +944,9 @@ var Sprint;
         })
       }
       if (value == null) {
-        return this.get(0)[propertyName]
+        var el = this.get(0)
+        if (!el) return
+        return el[propertyName]
       }
       var isFunc = typeof value == "function"
       return this.each(function(i) {
@@ -1037,6 +1049,7 @@ var Sprint;
     val: function(value) {
       if (value == null) {
         var el = this.get(0)
+        if (!el) return
         if (el.multiple) {
           var values = []
           this.first().children(":checked").each(function() {
