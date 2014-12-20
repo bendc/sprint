@@ -1,5 +1,5 @@
 /*
- * Sprint JavaScript Library v0.5.2
+ * Sprint JavaScript Library v0.5.3
  * http://sprintjs.com
  *
  * Copyright (c) 2014, 2015 Benjamin De Cock
@@ -971,8 +971,10 @@ var Sprint;
     remove: function(selector) {
       var self = this
       return this.each(function() {
+        var parent = this.parentElement
+        if (!parent) return
         if (!selector || self.is(selector, this)) {
-          this.parentNode.removeChild(this)
+          parent.removeChild(this)
         }
       })
     },
@@ -1053,6 +1055,29 @@ var Sprint;
     },
     toggleClass: function(className, bool) {
       return manipulateClass.call(this, "toggle", className, bool)
+    },
+    unwrap: function() {
+      var parents = []
+      var parentsLen = 0
+
+      this.each(function() {
+        var parent = this.parentElement
+        if (!parent || parent == d.body || parent == root) return
+
+        var i = parentsLen
+        while (i--) {
+          if (parent == parents[i]) return
+        }
+        parents[parentsLen++] = parent
+      })
+
+      var i = parentsLen
+      while (i--) {
+        var parent = Sprint(parents[i])
+        parent.before(parent.children()).remove()
+      }
+
+      return this
     },
     val: function(value) {
       if (value == null) {
