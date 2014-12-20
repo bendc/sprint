@@ -157,6 +157,38 @@ var Sprint;
     return Sprint(removeDuplicates(dom))
   }
 
+  function getSetDimension(obj, prop, value) {
+    // get
+    if (value == null) {
+      var el = obj.get(0)
+      if (!el) return
+      var capitalizedProp = prop[0].toUpperCase() + prop.substring(1)
+      // dimension of HTML document
+      if (el == d) {
+        var offset = root["offset" + capitalizedProp]
+        var inner = window["inner" + capitalizedProp]
+        return offset > inner ? offset : inner
+      }
+      // dimension of viewport
+      if (el == window) {
+        return window["inner" + capitalizedProp]
+      }
+      // dimension of element
+      return el.getBoundingClientRect()[prop]
+    }
+
+    // set
+    var isFunction = typeof value == "function"
+    var stringValue = isFunction ? "" : addPx(prop, value)
+    return obj.each(function(index) {
+      if (this == d || this == window) return
+      if (isFunction) {
+        stringValue = addPx(prop, value.call(this, index, Sprint(this)[prop]()))
+      }
+      this.style[prop] = stringValue
+    })
+  }
+
   function insertHTML(position, args) {
     var argsLen = args.length
     var contents = args
@@ -438,7 +470,7 @@ var Sprint;
     },
     attr: function(name, value) {
       var isFunc = typeof value == "function"
-      if (typeof value == "string" || typeof value == "number" || isFunc ) {
+      if (typeof value == "string" || typeof value == "number" || isFunc) {
         return this.each(function(i) {
           this.setAttribute(
             name, isFunc ? value.call(this, i, this.getAttribute(name)) : value
@@ -638,34 +670,7 @@ var Sprint;
       return false
     },
     height: function(value) {
-      // read
-      if (value == null) {
-        var el = this.get(0)
-        if (!el) return
-        switch (el) {
-          // height of HTML document
-          case d:
-            var offset = root.offsetHeight
-            var inner = window.innerHeight
-            return offset > inner ? offset : inner
-          // height of the viewport
-          case window:
-            return window.innerHeight
-          // height of an element
-          default:
-            return el.getBoundingClientRect().height
-        }
-      }
-
-      // set
-      var isFunction = typeof value == "function"
-      var stringValue = isFunction ? "" : addPx("height", value)
-      return this.each(function(index) {
-        if (isFunction) {
-          stringValue = addPx("height", value.call(this, index, Sprint(this).height()))
-        }
-        this.style.height = stringValue
-      })
+      return getSetDimension(this, "height", value)
     },
     html: function(htmlString) {
       if (htmlString == null) {
@@ -1087,6 +1092,9 @@ var Sprint;
       function selectMatchedValues(domEl, attr) {
         domEl[attr] = value.indexOf(domEl.value) < 0 ? false : true
       }
+    },
+    width: function(value) {
+      return getSetDimension(this, "width", value)
     },
     wrap: function(wrappingElement) {
       return wrap.call(this, wrappingElement)
