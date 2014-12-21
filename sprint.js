@@ -448,11 +448,7 @@ var Sprint;
 
   Init.prototype = {
     add: function(selector) {
-      var dom = this.get()
-      Sprint(selector).each(function() {
-        dom.push(this)
-      })
-      return Sprint(removeDuplicates(dom))
+      return Sprint(removeDuplicates(this.get().concat(Sprint(selector).get())))
     },
     addClass: function(className) {
       return manipulateClass.call(this, "add", className)
