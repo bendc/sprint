@@ -1,5 +1,5 @@
 /*
- * Sprint JavaScript Library v0.5.3
+ * Sprint JavaScript Library v0.5.4
  * http://sprintjs.com
  *
  * Copyright (c) 2014, 2015 Benjamin De Cock
@@ -18,10 +18,12 @@ var Sprint;
       this.insertBefore(el, this.firstChild)
     },
     afterend: function(el) {
-      this.parentNode.insertBefore(el, this.nextSibling)
+      var parent = this.parentElement
+      parent && parent.insertBefore(el, this.nextSibling)
     },
     beforebegin: function(el) {
-      this.parentNode.insertBefore(el, this)
+      var parent = this.parentElement
+      parent && parent.insertBefore(el, this)
     },
     beforeend: function(el) {
       this.appendChild(el)
@@ -446,13 +448,11 @@ var Sprint;
 
   Init.prototype = {
     add: function(selector) {
-      var added = Sprint(selector)
-      var dom = added.get()
-      this.each(function() {
+      var dom = this.get()
+      Sprint(selector).each(function() {
         dom.push(this)
       })
-      added.length = dom.length
-      return added
+      return Sprint(removeDuplicates(dom))
     },
     addClass: function(className) {
       return manipulateClass.call(this, "add", className)
@@ -770,17 +770,19 @@ var Sprint;
     },
     map: function(callback) {
       var values = []
+      var valuesLen = 0
+
       this.each(function(i) {
         var val = callback.call(this, i, this)
+        if (val == null) return
         if (Array.isArray(val)) {
           var len = val.length
           for (var j = 0; j < len; j++) {
-            values.push(val[j])
+            values[valuesLen++] = val[j]
           }
+          return
         }
-        else {
-          val == null || values.push(val)
-        }
+        values[valuesLen++] = val
       })
       return Sprint(values)
     },
@@ -1064,6 +1066,7 @@ var Sprint;
         var parent = this.parentElement
         if (!parent || parent == d.body || parent == root) return
 
+        // avoid duplicated parents in order to unwrap sibling elements to max. 1 level up
         var i = parentsLen
         while (i--) {
           if (parent == parents[i]) return
