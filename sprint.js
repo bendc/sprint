@@ -1,5 +1,5 @@
 /*
- * Sprint JavaScript Library v0.5.4
+ * Sprint JavaScript Library v0.5.5
  * http://sprintjs.com
  *
  * Copyright (c) 2014, 2015 Benjamin De Cock
@@ -406,11 +406,9 @@ var Sprint;
         if (selector[0] == "<") {
           var tmp = d.createElement("div")
           tmp.innerHTML = selector.trim()
-          var fragment = d.createDocumentFragment()
-          fragment.appendChild(tmp.firstChild)
-          var node = fragment.firstChild
-          // prevent fragment to be considered as node's parent
-          fragment.textContent = ""
+          var node = tmp.firstChild
+          // prevent tmp to be node's parentNode
+          tmp.textContent = ""
           this.dom = [node]
         }
         else {
