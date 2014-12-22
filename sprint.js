@@ -62,6 +62,46 @@ var Sprint;
     "z-index"
   ]
   var root = d.documentElement
+  var wrapMap = {
+    option: {
+      intro: "<select multiple=multiple>",
+      outro: "</select>"
+    },
+    legend: {
+      intro: "<fieldset>",
+      outro: "<fieldset>"
+    },
+    area: {
+      intro: "<map>",
+      outro: "<map>"
+    },
+    param: {
+      intro: "<object>",
+      outro: "<object>"
+    },
+    thead: {
+      intro: "<table>",
+      outro: "<table>"
+    },
+    tr: {
+      intro: "<table><tbody>",
+      outro: "</tbody></table>"
+    },
+    col: {
+      intro: "<table><tbody></tbody><colgroup>",
+      outro: "</colgroup></table>"
+    },
+    td: {
+      intro: "<table><tbody><tr>",
+      outro: "</tr></tbody></table>"
+    }
+  };
+  // elements needing a construct already defined by other elements
+  ["tbody", "tfoot", "colgroup", "caption"].forEach(function(tag) {
+    wrapMap[tag] = wrapMap.thead
+  })
+  wrapMap.th = wrapMap.td
+  wrapMap.optgroup = wrapMap.option
 
   function addEventListeners(listeners, el) {
     var sprintClone = Sprint(el)
@@ -238,6 +278,14 @@ var Sprint;
         var elementsToInsertLen = elementsToInsert.length
 
         this.each(function(index) {
+          /*
+           * The fragment serves multiple purposes:
+           * 1) It significantly boosts perf when multiple elements are added.
+           * 2) It avoids the need for elementsToInsert.reverse() for afterbegin and afterend
+           * 3) It removes an element from its original position before adding it back, which is
+           * especially useful for elements not part of the DOM tree. That means it's important even
+           * when elementsToInsertLen == 1.
+           */
           var fragment = d.createDocumentFragment()
           for (var i = 0; i < elementsToInsertLen; i++) {
             var element = elementsToInsert[i]
@@ -405,8 +453,20 @@ var Sprint;
       case "string":
         if (selector[0] == "<") {
           var tmp = d.createElement("div")
-          tmp.innerHTML = selector.trim()
-          var node = tmp.firstChild
+          var tag = /[\w|-]+/.exec(selector)[0]
+          var inMap = wrapMap[tag]
+          var validHTML = inMap ? inMap.intro + selector.trim() + inMap.outro : selector.trim()
+
+          tmp.insertAdjacentHTML("beforeend", validHTML)
+          var node = tmp.lastChild
+
+          if (inMap) {
+            var i = inMap.outro.match(/</g).length
+            while (i--) {
+              node = node.lastChild
+            }
+          }
+
           // prevent tmp to be node's parentNode
           tmp.textContent = ""
           this.dom = [node]
@@ -774,18 +834,20 @@ var Sprint;
       var values = []
       var valuesLen = 0
 
-      this.each(function(i) {
-        var val = callback.call(this, i, this)
-        if (val == null) return
+      for (var i = 0; i < this.length; i++) {
+        var el = this.get(i)
+        var val = callback.call(el, i, el)
+        if (val == null) continue
         if (Array.isArray(val)) {
           var len = val.length
           for (var j = 0; j < len; j++) {
             values[valuesLen++] = val[j]
           }
-          return
+          continue
         }
         values[valuesLen++] = val
-      })
+      }
+
       return Sprint(values)
     },
     next: function(selector) {
