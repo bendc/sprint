@@ -237,11 +237,8 @@ var Sprint;
         })()
         var elementsToInsertLen = elementsToInsert.length
 
-        if (elementsToInsertLen > 1 && position.indexOf("after") > -1) {
-          elementsToInsert.reverse()
-        }
-
         this.each(function(index) {
+          var fragment = d.createDocumentFragment()
           for (var i = 0; i < elementsToInsertLen; i++) {
             var element = elementsToInsert[i]
             var elementToInsert
@@ -252,9 +249,10 @@ var Sprint;
             else {
               elementToInsert = element
             }
-            domMethods[position].call(this, elementToInsert)
+            fragment.appendChild(elementToInsert)
             clonedElements.push(elementToInsert)
           }
+          domMethods[position].call(this, fragment)
         })
 
         if (isSprintObj) {
@@ -408,8 +406,12 @@ var Sprint;
         if (selector[0] == "<") {
           var tmp = d.createElement("div")
           tmp.innerHTML = selector.trim()
-          // cloneNode prevents the div to be listed as a parent of nodes not in the DOM
-          this.dom = [tmp.firstChild.cloneNode(true)]
+          var fragment = d.createDocumentFragment()
+          fragment.appendChild(tmp.firstChild)
+          var node = fragment.firstChild
+          // prevent fragment to be considered as node's parent
+          fragment.textContent = ""
+          this.dom = [node]
         }
         else {
           if (context && context instanceof Init) {
@@ -448,7 +450,13 @@ var Sprint;
 
   Init.prototype = {
     add: function(selector) {
-      return Sprint(removeDuplicates(this.get().concat(Sprint(selector).get())))
+      var dom = this.get()
+      var objToAdd = Sprint(selector)
+      var domToAdd = objToAdd.get()
+      for (var i = 0; i < objToAdd.length; i++) {
+        dom.push(domToAdd[i])
+      }
+      return Sprint(removeDuplicates(dom))
     },
     addClass: function(className) {
       return manipulateClass.call(this, "add", className)
@@ -1055,27 +1063,10 @@ var Sprint;
       return manipulateClass.call(this, "toggle", className, bool)
     },
     unwrap: function() {
-      var parents = []
-      var parentsLen = 0
-
-      this.each(function() {
-        var parent = this.parentElement
-        if (!parent || parent == d.body || parent == root) return
-
-        // avoid duplicated parents in order to unwrap sibling elements to max. 1 level up
-        var i = parentsLen
-        while (i--) {
-          if (parent == parents[i]) return
-        }
-        parents[parentsLen++] = parent
+      this.parent().each(function() {
+        if (this == d.body || this == root) return
+        Sprint(this).replaceWith(this.childNodes)
       })
-
-      var i = parentsLen
-      while (i--) {
-        var parent = Sprint(parents[i])
-        parent.before(parent.children()).remove()
-      }
-
       return this
     },
     val: function(value) {
