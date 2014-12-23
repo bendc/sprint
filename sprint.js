@@ -694,25 +694,16 @@ var Sprint;
       return Sprint(this.get(index))
     },
     filter: function(selector) {
-      var dom = []
-      switch (typeof selector) {
-        case "string":
-          var self = this
-          this.each(function() {
-            if (!this.nodeType || this.nodeType > 1) return
-            self.is(selector, this) && dom.push(this)
-          })
-          break
-        case "function":
-          this.each(function(index, el) {
-            if (!this.nodeType || this.nodeType > 1) return
-            selector.call(this, index, el) && dom.push(this)
-          })
-          break
-        default:
-          return this
-      }
-      return Sprint(dom)
+      var isFunc = typeof selector == "function"
+      var self = this
+      return this.map(function(i) {
+        if ( !this.nodeType
+          || this.nodeType > 1
+          || (!isFunc && !self.is(selector, this))
+          || (isFunc && !selector.call(this, i, this))
+        ) return
+        return this
+      }, false)
     },
     find: function(selector) {
       // .find(selector)
@@ -870,17 +861,29 @@ var Sprint;
     last: function() {
       return this.eq(-1)
     },
-    map: function(callback) {
+    map: function(callback, flattenArrays) {
+      /*
+       * flattenArrays (bool, true by default) is for internal usage only (although it might be
+       * interesting to document it publicly).
+       * Many methods rely on map(), thus being able to avoid the unnecessary Array.isArray() check
+       * on each element is a significant perf boost.
+       */
+      if (flattenArrays == null) {
+        flattenArrays = true
+      }
+
+      var dom = this.get()
+      var len = this.length
       var values = []
       var valuesLen = 0
 
-      for (var i = 0; i < this.length; i++) {
-        var el = this.get(i)
+      for (var i = 0; i < len; i++) {
+        var el = dom[i]
         var val = callback.call(el, i, el)
         if (val == null) continue
-        if (Array.isArray(val)) {
-          var len = val.length
-          for (var j = 0; j < len; j++) {
+        if (flattenArrays && Array.isArray(val)) {
+          var valLen = val.length
+          for (var j = 0; j < valLen; j++) {
             values[valuesLen++] = val[j]
           }
           continue
