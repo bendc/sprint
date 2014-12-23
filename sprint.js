@@ -1,5 +1,5 @@
 /*
- * Sprint JavaScript Library v0.5.7
+ * Sprint JavaScript Library v0.6.0
  * http://sprintjs.com
  *
  * Copyright (c) 2014, 2015 Benjamin De Cock
@@ -12,7 +12,6 @@ var Sprint;
 (function() {
   "use strict"
 
-  var d = document
   var domMethods = {
     afterbegin: function(el) {
       this.insertBefore(el, this.firstChild)
@@ -61,7 +60,41 @@ var Sprint;
     "widows",
     "z-index"
   ]
-  var root = d.documentElement
+  var root = document.documentElement
+  var scroll = {
+    root: null,
+    set: function(sprintObj, method, value) {
+      // define scroll root element on first run
+      if (!this.root) {
+        var initialScrollPos = root.scrollTop
+        root.scrollTop = initialScrollPos + 1
+        var updatedScrollPos = root.scrollTop
+        root.scrollTop = initialScrollPos
+        this.root = updatedScrollPos > initialScrollPos
+          ? root // spec-compliant browsers (like FF34 and IE11)
+          : document.body // naughty boys (like Chrome 39 and Safari 8)
+      }
+
+      // get scroll position
+      if (value == null) {
+        var el = sprintObj.get(0)
+        if (!el) return
+        if (el == window || el == document) {
+          el = scroll.root
+        }
+        return el[method]
+      }
+
+      // set scroll position
+      return sprintObj.each(function() {
+        var el = this
+        if (el == window || el == document) {
+          el = scroll.root
+        }
+        el[method] = value
+      })
+    }
+  }
   var wrapMap = {
     legend: {
       intro: "<fieldset>",
@@ -131,8 +164,8 @@ var Sprint;
   }
 
   function duplicateEventListeners(el, clone) {
-    // Ignore text nodes
-    if (el.nodeType == 3) return
+    // Element nodes only
+    if (el.nodeType > 1) return
 
     // Duplicate event listeners for the parent element...
     var listeners = el.sprintEventListeners
@@ -180,7 +213,7 @@ var Sprint;
 
     for (var i = 0; i < this.length; i++) {
       var el = this.get(i)
-      if (!el.nodeType || el.nodeType > 1) return
+      if (el.nodeType > 1) return
       var descendants = selectElements("*", el)
       var descendantsLen = descendants.length
       for (var j = 0; j < descendantsLen; j++) {
@@ -202,10 +235,10 @@ var Sprint;
     // get
     if (value == null) {
       var el = obj.get(0)
-      if (!el || !el.nodeType || el.nodeType > 1) return
+      if (!el || el.nodeType > 1) return
       var capitalizedProp = prop[0].toUpperCase() + prop.substring(1)
       // dimension of HTML document
-      if (el == d) {
+      if (el == document) {
         var offset = root["offset" + capitalizedProp]
         var inner = window["inner" + capitalizedProp]
         return offset > inner ? offset : inner
@@ -222,7 +255,7 @@ var Sprint;
     var isFunction = typeof value == "function"
     var stringValue = isFunction ? "" : addPx(prop, value)
     return obj.each(function(index) {
-      if (this == d || this == window || !this.nodeType || this.nodeType > 1) return
+      if (this == document || this == window || this.nodeType > 1) return
       if (isFunction) {
         stringValue = addPx(prop, value.call(this, index, Sprint(this)[prop]()))
       }
@@ -284,7 +317,7 @@ var Sprint;
            * especially useful for elements not part of the DOM tree. That means it's important even
            * when elementsToInsertLen == 1.
            */
-          var fragment = d.createDocumentFragment()
+          var fragment = document.createDocumentFragment()
           for (var i = 0; i < elementsToInsertLen; i++) {
             var element = elementsToInsert[i]
             var elementToInsert
@@ -330,7 +363,7 @@ var Sprint;
     }
 
     return this.each(function(i, el) {
-      if (!this.nodeType || this.nodeType > 1) return
+      if (this.nodeType > 1) return
       if (!isString) {
         // className is a function
         var callbackValue = className.call(el, i, el.className)
@@ -408,7 +441,7 @@ var Sprint;
   }
 
   function selectElements(selector, context) {
-    context = context || d
+    context = context || document
     // class, id, tag name or universal selector
     if (/^[\#.]?[\w-]+$/.test(selector)) {
       var firstChar = selector[0]
@@ -420,7 +453,7 @@ var Sprint;
         return el ? [el] : []
       }
       if (selector == "body") {
-        return [d.body]
+        return [document.body]
       }
       return toArray(context.getElementsByTagName(selector))
     }
@@ -448,7 +481,7 @@ var Sprint;
     function callback() {
       var wrap = Sprint(wrappingElement).clone(true).get(0)
       var innerWrap = wrap
-      if (!wrap || !this.nodeType || this.nodeType > 1) return
+      if (!wrap || this.nodeType > 1) return
       while (innerWrap.firstChild) {
         innerWrap = innerWrap.firstChild
       }
@@ -477,7 +510,7 @@ var Sprint;
     switch (typeof selector) {
       case "string":
         if (selector[0] == "<") {
-          var tmp = d.createElement("div")
+          var tmp = document.createElement("div")
           var tag = /[\w:-]+/.exec(selector)[0]
           var inMap = wrapMap[tag]
           var validHTML = selector.trim()
@@ -563,7 +596,7 @@ var Sprint;
       var isFunc = typeof value == "function"
       if (typeof value == "string" || typeof value == "number" || isFunc) {
         return this.each(function(i) {
-          if (!this.nodeType || this.nodeType > 1) return
+          if (this.nodeType > 1) return
           this.setAttribute(
             name, isFunc ? value.call(this, i, this.getAttribute(name)) : value
           )
@@ -573,7 +606,7 @@ var Sprint;
         var attrNames = Object.keys(name)
         var attrNamesLen = attrNames.length
         return this.each(function() {
-          if (!this.nodeType || this.nodeType > 1) return
+          if (this.nodeType > 1) return
           for (var i = 0; i < attrNamesLen; i++) {
             var attribute = attrNames[i]
             this.setAttribute(attribute, name[attribute])
@@ -581,7 +614,7 @@ var Sprint;
         })
       }
       var el = this.get(0)
-      if (!el || !el.nodeType || el.nodeType > 1) return
+      if (!el || el.nodeType > 1) return
       var attrValue = el.getAttribute(name)
       if (attrValue == null) {
         return undefined
@@ -599,7 +632,7 @@ var Sprint;
       var dom = []
       var self = this
       this.each(function() {
-        if (!this.nodeType || this.nodeType > 1) return
+        if (this.nodeType > 1) return
         var nodes = this.children
         var nodesLen = nodes.length
         for (var i = 0; i < nodesLen; i++) {
@@ -633,7 +666,7 @@ var Sprint;
           var relativeValue = parseInt(value[0] + value.slice(2))
         }
         return this.each(function() {
-          if (!this.nodeType || this.nodeType > 1) return
+          if (this.nodeType > 1) return
           if (isRelativeValue) {
             var current = parseInt(getComputedStyle(this).getPropertyValue(property))
             var result = current + relativeValue
@@ -644,7 +677,7 @@ var Sprint;
       // set
       if (valueType == "function") {
         return this.each(function(index) {
-          if (!this.nodeType || this.nodeType > 1) return
+          if (this.nodeType > 1) return
           var oldValue = getComputedStyle(this).getPropertyValue(property)
           this.style[property] = value.call(this, index, oldValue)
         })
@@ -652,13 +685,13 @@ var Sprint;
       // read
       if (typeof property == "string") {
         var el = this.get(0)
-        if (!el || !el.nodeType || el.nodeType > 1) return
+        if (!el || el.nodeType > 1) return
         return getComputedStyle(el).getPropertyValue(property)
       }
       // read
       if (Array.isArray(property)) {
         var el = this.get(0)
-        if (!el || !el.nodeType || el.nodeType > 1) return
+        if (!el || el.nodeType > 1) return
         var o = {}
         var styles = getComputedStyle(el)
         var propertyLen = property.length
@@ -672,7 +705,7 @@ var Sprint;
       var properties = Object.keys(property)
       var propertiesLen = properties.length
       return this.each(function() {
-        if (!this.nodeType || this.nodeType > 1) return
+        if (this.nodeType > 1) return
         for (var i = 0; i < propertiesLen; i++) {
           var prop = properties[i]
           this.style[prop] = addPx(prop, property[prop])
@@ -701,8 +734,7 @@ var Sprint;
       var isFunc = typeof selector == "function"
       var self = this
       return this.map(function(i) {
-        if ( !this.nodeType
-          || this.nodeType > 1
+        if ( this.nodeType > 1
           || (!isFunc && !self.is(selector, this))
           || (isFunc && !selector.call(this, i, this))
         ) return
@@ -714,7 +746,7 @@ var Sprint;
       if (typeof selector == "string") {
         var dom = []
         this.each(function() {
-          if (!this.nodeType || this.nodeType > 1) return
+          if (this.nodeType > 1) return
           var elements = selectElements(selector, this)
           var elementsLen = elements.length
           for (var i = 0; i < elementsLen; i++) {
@@ -743,7 +775,7 @@ var Sprint;
       // .has(selector)
       if (typeof selector == "string") {
         return this.map(function() {
-          if (!this.nodeType || this.nodeType > 1 || !selectElements(selector, this)[0]) return
+          if (this.nodeType > 1 || !selectElements(selector, this)[0]) return
           return this
         }, false)
       }
@@ -755,7 +787,7 @@ var Sprint;
       var i = this.length
       while (i--) {
         var el = this.get(i)
-        if (!el.nodeType || el.nodeType > 1) return
+        if (el.nodeType > 1) return
         if (el.classList.contains(name)) {
           return true
         }
@@ -825,7 +857,7 @@ var Sprint;
       if (typeof selector == "string") {
         for (var i = 0; i < setLen; i++) {
           var el = set[i]
-          if (!el.nodeType || el.nodeType > 1) continue
+          if (el.nodeType > 1) continue
           if (el[matches](selector)) {
             return true
           }
@@ -969,7 +1001,7 @@ var Sprint;
     offset: function(coordinates) {
       if (!coordinates) {
         var el = this.get(0)
-        if (!el || !el.nodeType || el.nodeType > 1) return
+        if (!el || el.nodeType > 1) return
         var pos = el.getBoundingClientRect()
         return {
           top: pos.top,
@@ -978,7 +1010,7 @@ var Sprint;
       }
       if (typeof coordinates == "object") {
         return this.each(function() {
-          if (!this.nodeType || this.nodeType > 1) return
+          if (this.nodeType > 1) return
           var $this = Sprint(this)
           $this.css("position") == "static"
             ? $this.css("position", "relative")
@@ -1004,7 +1036,7 @@ var Sprint;
     offsetParent: function() {
       var dom = []
       this.each(function() {
-        if (!this.nodeType || this.nodeType > 1) return
+        if (this.nodeType > 1) return
         var prt = this
         while (prt != root) {
           prt = prt.parentNode
@@ -1098,7 +1130,7 @@ var Sprint;
         var attributes = attributeName.trim().split(" ")
         var attributesLen = attributes.length
         this.each(function() {
-          if (!this.nodeType || this.nodeType > 1) return
+          if (this.nodeType > 1) return
           for (var i = 0; i < attributesLen; i++) {
             this.removeAttribute(attributes[i])
           }
@@ -1125,6 +1157,12 @@ var Sprint;
         })
       }
       return this.before(newContent).remove()
+    },
+    scrollLeft: function(value) {
+      return scroll.set(this, "scrollLeft", value)
+    },
+    scrollTop: function(value) {
+      return scroll.set(this, "scrollTop", value)
     },
     siblings: function(selector) {
       var siblings = []
@@ -1174,7 +1212,7 @@ var Sprint;
     },
     unwrap: function() {
       this.parent().each(function() {
-        if (this == d.body || this == root) return
+        if (this == document.body || this == root) return
         Sprint(this).replaceWith(this.childNodes)
       })
       return this
