@@ -1,5 +1,5 @@
 /*
- * Sprint JavaScript Library v0.5.5
+ * Sprint JavaScript Library v0.5.6
  * http://sprintjs.com
  *
  * Copyright (c) 2014, 2015 Benjamin De Cock
@@ -63,25 +63,21 @@ var Sprint;
   ]
   var root = d.documentElement
   var wrapMap = {
-    option: {
-      intro: "<select multiple=multiple>",
-      outro: "</select>"
-    },
     legend: {
       intro: "<fieldset>",
-      outro: "<fieldset>"
+      outro: "</fieldset>"
     },
     area: {
       intro: "<map>",
-      outro: "<map>"
+      outro: "</map>"
     },
     param: {
       intro: "<object>",
-      outro: "<object>"
+      outro: "</object>"
     },
     thead: {
       intro: "<table>",
-      outro: "<table>"
+      outro: "</table>"
     },
     tr: {
       intro: "<table><tbody>",
@@ -101,7 +97,8 @@ var Sprint;
     wrapMap[tag] = wrapMap.thead
   })
   wrapMap.th = wrapMap.td
-  wrapMap.optgroup = wrapMap.option
+
+  // utils
 
   function addEventListeners(listeners, el) {
     var sprintClone = Sprint(el)
@@ -182,7 +179,9 @@ var Sprint;
     var dom = []
 
     for (var i = 0; i < this.length; i++) {
-      var descendants = selectElements("*", this.get(i))
+      var el = this.get(i)
+      if (!el.nodeType || el.nodeType > 1) return
+      var descendants = selectElements("*", el)
       var descendantsLen = descendants.length
       for (var j = 0; j < descendantsLen; j++) {
         for (var k = 0; k < elementsToFindLen; k++) {
@@ -203,7 +202,7 @@ var Sprint;
     // get
     if (value == null) {
       var el = obj.get(0)
-      if (!el) return
+      if (!el || !el.nodeType || el.nodeType > 1) return
       var capitalizedProp = prop[0].toUpperCase() + prop.substring(1)
       // dimension of HTML document
       if (el == d) {
@@ -223,7 +222,7 @@ var Sprint;
     var isFunction = typeof value == "function"
     var stringValue = isFunction ? "" : addPx(prop, value)
     return obj.each(function(index) {
-      if (this == d || this == window) return
+      if (this == d || this == window || !this.nodeType || this.nodeType > 1) return
       if (isFunction) {
         stringValue = addPx(prop, value.call(this, index, Sprint(this)[prop]()))
       }
@@ -264,11 +263,23 @@ var Sprint;
           if (isSprintObj) {
             return content.get()
           }
-          // [node1, node2]
+          // array is sanitized: Sprint objects are flattened and null values are filtered out.
           if (Array.isArray(content)) {
-            return content
+            var flatArr = []
+            var len = content.length
+            for (var i = 0; i < len; i++) {
+              var el = content[i]
+              if (el instanceof Init) {
+                for (var j = 0; j < el.length; j++) {
+                  flatArr.push(el.get(j))
+                }
+                continue
+              }
+              el && flatArr.push(el)
+            }
+            return flatArr
           }
-          // Existing DOM node, createTextNode(), createElement()
+          // DOM node
           if (content.nodeType) {
             return [content]
           }
@@ -332,6 +343,7 @@ var Sprint;
     }
 
     return this.each(function(i, el) {
+      if (!this.nodeType || this.nodeType > 1) return
       if (!isString) {
         // className is a function
         var callbackValue = className.call(el, i, el.className)
@@ -424,6 +436,7 @@ var Sprint;
     function callback() {
       var wrap = Sprint(wrappingElement).clone(true).get(0)
       var innerWrap = wrap
+      if (!wrap || !this.nodeType || this.nodeType > 1) return
       while (innerWrap.firstChild) {
         innerWrap = innerWrap.firstChild
       }
@@ -453,11 +466,15 @@ var Sprint;
       case "string":
         if (selector[0] == "<") {
           var tmp = d.createElement("div")
-          var tag = /[\w|-]+/.exec(selector)[0]
+          var tag = /[\w:-]+/.exec(selector)[0]
           var inMap = wrapMap[tag]
-          var validHTML = inMap ? inMap.intro + selector.trim() + inMap.outro : selector.trim()
+          var validHTML = selector.trim()
 
-          tmp.insertAdjacentHTML("beforeend", validHTML)
+          if (inMap) {
+            validHTML = inMap.intro + validHTML + inMap.outro
+          }
+
+          tmp.insertAdjacentHTML("afterbegin", validHTML)
           var node = tmp.lastChild
 
           if (inMap) {
@@ -491,7 +508,13 @@ var Sprint;
           return selector
         }
         if (Array.isArray(selector)) {
-          this.dom = selector
+          var arrLen = selector.length
+          var cleanArr = []
+          for (var i = 0; i < arrLen; i++) {
+            var el = selector[i]
+            el && cleanArr.push(el)
+          }
+          this.dom = cleanArr
         }
         else if (
           selector instanceof NodeList ||
@@ -500,7 +523,7 @@ var Sprint;
           this.dom = toArray(selector)
         }
         else {
-          this.dom = [selector]
+          this.dom = selector ? [selector] : []
         }
         this.length = this.dom.length
     }
@@ -534,6 +557,7 @@ var Sprint;
       var isFunc = typeof value == "function"
       if (typeof value == "string" || typeof value == "number" || isFunc) {
         return this.each(function(i) {
+          if (!this.nodeType || this.nodeType > 1) return
           this.setAttribute(
             name, isFunc ? value.call(this, i, this.getAttribute(name)) : value
           )
@@ -543,6 +567,7 @@ var Sprint;
         var attrNames = Object.keys(name)
         var attrNamesLen = attrNames.length
         return this.each(function() {
+          if (!this.nodeType || this.nodeType > 1) return
           for (var i = 0; i < attrNamesLen; i++) {
             var attribute = attrNames[i]
             this.setAttribute(attribute, name[attribute])
@@ -550,7 +575,7 @@ var Sprint;
         })
       }
       var el = this.get(0)
-      if (!el) return
+      if (!el || !el.nodeType || el.nodeType > 1) return
       var attrValue = el.getAttribute(name)
       if (attrValue == null) {
         return undefined
@@ -568,6 +593,7 @@ var Sprint;
       var dom = []
       var self = this
       this.each(function() {
+        if (!this.nodeType || this.nodeType > 1) return
         var nodes = this.children
         var nodesLen = nodes.length
         for (var i = 0; i < nodesLen; i++) {
@@ -582,6 +608,7 @@ var Sprint;
     clone: function(withEvents) {
       var cloned = []
       this.each(function() {
+        if (!this) return
         var clone = this.cloneNode(true)
         withEvents && duplicateEventListeners(this, clone)
         cloned.push(clone)
@@ -602,6 +629,7 @@ var Sprint;
           var relativeValue = parseInt(value[0] + value.slice(2))
         }
         return this.each(function() {
+          if (!this.nodeType || this.nodeType > 1) return
           if (isRelativeValue) {
             var current = parseInt(getComputedStyle(this).getPropertyValue(property))
             var result = current + relativeValue
@@ -612,6 +640,7 @@ var Sprint;
       // set
       if (valueType == "function") {
         return this.each(function(index) {
+          if (!this.nodeType || this.nodeType > 1) return
           var oldValue = getComputedStyle(this).getPropertyValue(property)
           this.style[property] = value.call(this, index, oldValue)
         })
@@ -619,13 +648,15 @@ var Sprint;
       // read
       if (typeof property == "string") {
         var el = this.get(0)
-        if (!el) return
+        if (!el || !el.nodeType || el.nodeType > 1) return
         return getComputedStyle(el).getPropertyValue(property)
       }
       // read
       if (Array.isArray(property)) {
+        var el = this.get(0)
+        if (!el || !el.nodeType || el.nodeType > 1) return
         var o = {}
-        var styles = getComputedStyle(this.get(0))
+        var styles = getComputedStyle(el)
         var propertyLen = property.length
         for (var i = 0; i < propertyLen; i++) {
           var prop = property[i]
@@ -637,6 +668,7 @@ var Sprint;
       var properties = Object.keys(property)
       var propertiesLen = properties.length
       return this.each(function() {
+        if (!this.nodeType || this.nodeType > 1) return
         for (var i = 0; i < propertiesLen; i++) {
           var prop = properties[i]
           this.style[prop] = addPx(prop, property[prop])
@@ -667,11 +699,13 @@ var Sprint;
         case "string":
           var self = this
           this.each(function() {
+            if (!this.nodeType || this.nodeType > 1) return
             self.is(selector, this) && dom.push(this)
           })
           break
         case "function":
           this.each(function(index, el) {
+            if (!this.nodeType || this.nodeType > 1) return
             selector.call(this, index, el) && dom.push(this)
           })
           break
@@ -685,6 +719,7 @@ var Sprint;
       if (typeof selector == "string") {
         var dom = []
         this.each(function() {
+          if (!this.nodeType || this.nodeType > 1) return
           var elements = selectElements(selector, this)
           var elementsLen = elements.length
           for (var i = 0; i < elementsLen; i++) {
@@ -714,6 +749,7 @@ var Sprint;
       if (typeof selector == "string") {
         var dom = []
         this.each(function() {
+          if (!this.nodeType || this.nodeType > 1) return
           selectElements(selector, this)[0] && dom.push(this)
         })
         return Sprint(dom)
@@ -725,7 +761,9 @@ var Sprint;
     hasClass: function(name) {
       var i = this.length
       while (i--) {
-        if (this.get(i).classList.contains(name)) {
+        var el = this.get(i)
+        if (!el.nodeType || el.nodeType > 1) return
+        if (el.classList.contains(name)) {
           return true
         }
       }
@@ -793,7 +831,9 @@ var Sprint;
 
       if (typeof selector == "string") {
         for (var i = 0; i < setLen; i++) {
-          if (set[i][matches](selector)) {
+          var el = set[i]
+          if (!el.nodeType || el.nodeType > 1) continue
+          if (el[matches](selector)) {
             return true
           }
         }
@@ -923,7 +963,7 @@ var Sprint;
     offset: function(coordinates) {
       if (!coordinates) {
         var el = this.get(0)
-        if (!el) return
+        if (!el || !el.nodeType || el.nodeType > 1) return
         var pos = el.getBoundingClientRect()
         return {
           top: pos.top,
@@ -932,6 +972,7 @@ var Sprint;
       }
       if (typeof coordinates == "object") {
         return this.each(function() {
+          if (!this.nodeType || this.nodeType > 1) return
           var $this = Sprint(this)
           $this.css("position") == "static"
             ? $this.css("position", "relative")
@@ -957,6 +998,7 @@ var Sprint;
     offsetParent: function() {
       var dom = []
       this.each(function() {
+        if (!this.nodeType || this.nodeType > 1) return
         var prt = this
         while (prt != root) {
           prt = prt.parentNode
@@ -998,6 +1040,7 @@ var Sprint;
         first: this.offset(),
         prt: this.parent().offset()
       }
+      if (!pos.first) return
       return {
         top: pos.first.top - pos.prt.top,
         left: pos.first.left - pos.prt.left
@@ -1049,6 +1092,7 @@ var Sprint;
         var attributes = attributeName.trim().split(" ")
         var attributesLen = attributes.length
         this.each(function() {
+          if (!this.nodeType || this.nodeType > 1) return
           for (var i = 0; i < attributesLen; i++) {
             this.removeAttribute(attributes[i])
           }
