@@ -1,5 +1,5 @@
 /*
- * Sprint JavaScript Library v0.5.6
+ * Sprint JavaScript Library v0.5.7
  * http://sprintjs.com
  *
  * Copyright (c) 2014, 2015 Benjamin De Cock
@@ -383,16 +383,14 @@ var Sprint;
   }
 
   function selectAdjacentSiblings(position, selector) {
-    var dom = []
     var self = this
-    this.each(function() {
+    return this.map(function() {
       var el = this[position + "ElementSibling"]
       if (!el) return
       if (!selector || self.is(selector, el)) {
-        dom.push(el)
+        return el
       }
-    })
-    return Sprint(dom)
+    }, false)
   }
 
   function selectElements(selector, context) {
@@ -606,14 +604,12 @@ var Sprint;
       return Sprint(dom)
     },
     clone: function(withEvents) {
-      var cloned = []
-      this.each(function() {
+      return this.map(function() {
         if (!this) return
         var clone = this.cloneNode(true)
         withEvents && duplicateEventListeners(this, clone)
-        cloned.push(clone)
-      })
-      return Sprint(cloned)
+        return clone
+      }, false)
     },
     closest: function(selector, context) {
       return findAncestors.call(this, false, false, true, selector, context)
@@ -738,12 +734,10 @@ var Sprint;
     has: function(selector) {
       // .has(selector)
       if (typeof selector == "string") {
-        var dom = []
-        this.each(function() {
-          if (!this.nodeType || this.nodeType > 1) return
-          selectElements(selector, this)[0] && dom.push(this)
-        })
-        return Sprint(dom)
+        return this.map(function() {
+          if (!this.nodeType || this.nodeType > 1 || !selectElements(selector, this)[0]) return
+          return this
+        }, false)
       }
 
       // .has(contained)
@@ -898,18 +892,16 @@ var Sprint;
     },
     not: function(selector) {
       var isFunc = typeof selector == "function"
-      var filtered = []
       var self = this
-      this.each(function(i) {
+      return this.map(function(i) {
         if (isFunc) {
           if (selector.call(this, i, this)) return
         }
         else {
           if (self.is(selector, this)) return
         }
-        filtered.push(this)
-      })
-      return Sprint(filtered)
+        return this
+      }, false)
     },
     off: function(type, callback) {
       switch (arguments.length) {
