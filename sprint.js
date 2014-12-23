@@ -263,21 +263,8 @@ var Sprint;
           if (isSprintObj) {
             return content.get()
           }
-          // array is sanitized: Sprint objects are flattened and null values are filtered out.
           if (Array.isArray(content)) {
-            var flatArr = []
-            var len = content.length
-            for (var i = 0; i < len; i++) {
-              var el = content[i]
-              if (el instanceof Init) {
-                for (var j = 0; j < el.length; j++) {
-                  flatArr.push(el.get(j))
-                }
-                continue
-              }
-              el && flatArr.push(el)
-            }
-            return flatArr
+            return sanitize(content, true)
           }
           // DOM node
           if (content.nodeType) {
@@ -362,24 +349,51 @@ var Sprint;
   }
 
   function removeDuplicates(arr) {
-    var cleanDom = []
-    var cleanDomLen = 0
+    var clean = []
+    var cleanLen = 0
     var arrLen = arr.length
 
     for (var i = 0; i < arrLen; i++) {
       var el = arr[i]
       var duplicate = false
 
-      for (var j = 0; j < cleanDomLen; j++) {
-        if (el !== cleanDom[j]) continue
+      for (var j = 0; j < cleanLen; j++) {
+        if (el !== clean[j]) continue
         duplicate = true
         break
       }
 
       if (duplicate) continue
-      cleanDom[cleanDomLen++] = el
+      clean[cleanLen] = el
+      ++cleanLen
     }
-    return cleanDom
+
+    return clean
+  }
+
+  function sanitize(arr, flattenObjects) {
+    // Remove null's and optionally flatten Sprint objects.
+    var sanitized = []
+    var sanitizedLen = 0
+    var arrLen = arr.length
+
+    for (var i = 0; i < arrLen; i++) {
+      var el = arr[i]
+      if (el == null) continue
+
+      if (flattenObjects && el instanceof Init) {
+        for (var j = 0; j < el.length; j++) {
+          sanitized[sanitizedLen] = el.get(j)
+          ++sanitizedLen
+        }
+        continue
+      }
+
+      sanitized[sanitizedLen] = el
+      ++sanitizedLen
+    }
+
+    return sanitized
   }
 
   function selectAdjacentSiblings(position, selector) {
@@ -506,14 +520,7 @@ var Sprint;
           return selector
         }
         if (Array.isArray(selector)) {
-          var arrLen = selector.length
-          var cleanArr = []
-          for (var i = 0; i < arrLen; i++) {
-            var el = selector[i]
-            if (el == null) continue
-            cleanArr.push(el)
-          }
-          this.dom = cleanArr
+          this.dom = sanitize(selector)
         }
         else if (
           selector instanceof NodeList ||
@@ -875,14 +882,18 @@ var Sprint;
       for (var i = 0; i < len; i++) {
         var el = dom[i]
         var val = callback.call(el, i, el)
+
         if (flattenArrays && Array.isArray(val)) {
           var valLen = val.length
           for (var j = 0; j < valLen; j++) {
-            values[valuesLen++] = val[j]
+            values[valuesLen] = val[j]
+            ++valuesLen
           }
           continue
         }
-        values[valuesLen++] = val
+
+        values[valuesLen] = val
+        ++valuesLen
       }
 
       return Sprint(values)
