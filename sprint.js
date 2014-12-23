@@ -510,7 +510,8 @@ var Sprint;
           var cleanArr = []
           for (var i = 0; i < arrLen; i++) {
             var el = selector[i]
-            el && cleanArr.push(el)
+            if (el == null) continue
+            cleanArr.push(el)
           }
           this.dom = cleanArr
         }
@@ -874,7 +875,6 @@ var Sprint;
       for (var i = 0; i < len; i++) {
         var el = dom[i]
         var val = callback.call(el, i, el)
-        if (val == null) continue
         if (flattenArrays && Array.isArray(val)) {
           var valLen = val.length
           for (var j = 0; j < valLen; j++) {
