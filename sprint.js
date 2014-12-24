@@ -1,5 +1,5 @@
 /*
- * Sprint JavaScript Library v0.6.0
+ * Sprint JavaScript Library v0.6.2
  * http://sprintjs.com
  *
  * Copyright (c) 2014, 2015 Benjamin De Cock
@@ -406,27 +406,31 @@ var Sprint;
 
   function sanitize(arr, flattenObjects) {
     // Remove null's and optionally flatten Sprint objects.
-    var sanitized = []
-    var sanitizedLen = 0
     var arrLen = arr.length
+    var i = arrLen
 
-    for (var i = 0; i < arrLen; i++) {
-      var el = arr[i]
-      if (el == null) continue
-
-      if (flattenObjects && el instanceof Init) {
-        for (var j = 0; j < el.length; j++) {
-          sanitized[sanitizedLen] = el.get(j)
-          ++sanitizedLen
+    // Check if arr needs to be sanitized first (significant perf boost for the most common case)
+    while (i--) {
+      // arr needs to be sanitized
+      if (arr[i] == null || (flattenObjects && arr[i] instanceof Init)) {
+        var sanitized = []
+        for (var j = 0; j < arrLen; j++) {
+          var el = arr[j]
+          if (el == null) continue
+          if (flattenObjects && el instanceof Init) {
+            for (var k = 0; k < el.length; k++) {
+              sanitized.push(el.get(k))
+            }
+            continue
+          }
+          sanitized.push(el)
         }
-        continue
+        return sanitized
       }
-
-      sanitized[sanitizedLen] = el
-      ++sanitizedLen
     }
 
-    return sanitized
+    // arr didn't need to be sanitized, return it
+    return arr
   }
 
   function selectAdjacentSiblings(position, selector) {
@@ -544,7 +548,7 @@ var Sprint;
         this.length = this.dom.length
         break
       case "function":
-        this.dom = [d]
+        this.dom = [document]
         this.length = 1
         this.on("DOMContentLoaded", selector)
         break
