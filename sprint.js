@@ -163,6 +163,27 @@ var Sprint;
     return stringValue
   }
 
+  function createDOM(HTMLString) {
+    var tmp = document.createElement("div")
+    var tag = /[\w:-]+/.exec(HTMLString)[0]
+    var inMap = wrapMap[tag]
+    var validHTML = HTMLString.trim()
+    if (inMap) {
+      validHTML = inMap.intro + validHTML + inMap.outro
+    }
+    tmp.insertAdjacentHTML("afterbegin", validHTML)
+    var node = tmp.lastChild
+    if (inMap) {
+      var i = inMap.outro.match(/</g).length
+      while (i--) {
+        node = node.lastChild
+      }
+    }
+    // prevent tmp to be node's parentNode
+    tmp.textContent = ""
+    return node
+  }
+
   function duplicateEventListeners(el, clone) {
     // Element nodes only
     if (el.nodeType > 1) return
@@ -511,65 +532,39 @@ var Sprint;
   // constructor
 
   function Init(selector, context) {
-    switch (typeof selector) {
-      case "string":
-        if (selector[0] == "<") {
-          var tmp = document.createElement("div")
-          var tag = /[\w:-]+/.exec(selector)[0]
-          var inMap = wrapMap[tag]
-          var validHTML = selector.trim()
-
-          if (inMap) {
-            validHTML = inMap.intro + validHTML + inMap.outro
-          }
-
-          tmp.insertAdjacentHTML("afterbegin", validHTML)
-          var node = tmp.lastChild
-
-          if (inMap) {
-            var i = inMap.outro.match(/</g).length
-            while (i--) {
-              node = node.lastChild
-            }
-          }
-
-          // prevent tmp to be node's parentNode
-          tmp.textContent = ""
-          this.dom = [node]
-        }
-        else {
-          if (context && context instanceof Init) {
-            this.dom = context.find(selector).get()
-          }
-          else {
-            this.dom = selectElements(selector, context)
-          }
-        }
-        this.length = this.dom.length
-        break
-      case "function":
-        this.dom = [document]
-        this.length = 1
-        this.on("DOMContentLoaded", selector)
-        break
-      default:
-        if (selector instanceof Init) {
-          return selector
-        }
-        if (Array.isArray(selector)) {
-          this.dom = sanitize(selector)
-        }
-        else if (
-          selector instanceof NodeList ||
-          selector instanceof HTMLCollection
-        ) {
-          this.dom = toArray(selector)
-        }
-        else {
-          this.dom = selector ? [selector] : []
-        }
-        this.length = this.dom.length
+    if (typeof selector == "string") {
+      // create DOM element
+      if (selector[0] == "<") {
+        this.dom = [createDOM(selector)]
+      }
+      // select DOM elements
+      else {
+        this.dom = context && context instanceof Init
+          ? context.find(selector).get()
+          : selectElements(selector, context)
+      }
     }
+    else if (Array.isArray(selector)) {
+      this.dom = sanitize(selector)
+    }
+    else if (
+      selector instanceof NodeList ||
+      selector instanceof HTMLCollection
+    ) {
+      this.dom = toArray(selector)
+    }
+    else if (typeof selector == "function") {
+      this.dom = [document]
+      document.addEventListener("DOMContentLoaded", selector)
+    }
+    else if (selector instanceof Init) {
+      return selector
+    }
+    else {
+      // DOM node
+      this.dom = selector ? [selector] : []
+    }
+    this.length = this.dom.length
   }
 
   Init.prototype = {
