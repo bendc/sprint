@@ -1,5 +1,5 @@
 /*
- * Sprint JavaScript Library v0.6.2
+ * Sprint JavaScript Library v0.7.0
  * http://sprintjs.com
  *
  * Copyright (c) 2014, 2015 Benjamin De Cock
@@ -418,8 +418,7 @@ var Sprint;
       }
 
       if (duplicate) continue
-      clean[cleanLen] = el
-      ++cleanLen
+      clean[cleanLen++] = el
     }
 
     return clean
@@ -454,14 +453,25 @@ var Sprint;
     return arr
   }
 
-  function selectAdjacentSiblings(position, selector) {
-    var self = this
-    return this.map(function() {
-      var el = this[position + "ElementSibling"]
-      if (!el) return
-      if (!selector || self.is(selector, el)) {
-        return el
+  function selectAdjacentSiblings(sprintObj, position, selector) {
+    var dom = []
+    var prop = position + "ElementSibling"
+    sprintObj.each(function() {
+      var el = this
+      while (el = el[prop]) {
+        if (selector && !sprintObj.is(selector, el)) continue
+        dom.push(el)
       }
+    })
+    return Sprint(removeDuplicates(dom))
+  }
+
+  function selectImmediateAdjacentSibling(sprintObj, position, selector) {
+    var prop = position + "ElementSibling"
+    return sprintObj.map(function() {
+      var el = this[prop]
+      if (!el || (selector && !sprintObj.is(selector, el))) return
+      return el
     }, false)
   }
 
@@ -908,7 +918,6 @@ var Sprint;
       var dom = this.get()
       var len = this.length
       var values = []
-      var valuesLen = 0
 
       for (var i = 0; i < len; i++) {
         var el = dom[i]
@@ -917,20 +926,21 @@ var Sprint;
         if (flattenArrays && Array.isArray(val)) {
           var valLen = val.length
           for (var j = 0; j < valLen; j++) {
-            values[valuesLen] = val[j]
-            ++valuesLen
+            values.push(val[j])
           }
           continue
         }
 
-        values[valuesLen] = val
-        ++valuesLen
+        values.push(val)
       }
 
       return Sprint(values)
     },
     next: function(selector) {
-      return selectAdjacentSiblings.call(this, "next", selector)
+      return selectImmediateAdjacentSibling(this, "next", selector)
+    },
+    nextAll: function(selector) {
+      return selectAdjacentSiblings(this, "next", selector)
     },
     not: function(selector) {
       var isFunc = typeof selector == "function"
@@ -1112,7 +1122,10 @@ var Sprint;
       return Sprint(insertHTML.call(Sprint(target), "afterbegin", [this]))
     },
     prev: function(selector) {
-      return selectAdjacentSiblings.call(this, "previous", selector)
+      return selectImmediateAdjacentSibling(this, "previous", selector)
+    },
+    prevAll: function(selector) {
+      return selectAdjacentSiblings(this, "previous", selector)
     },
     remove: function(selector) {
       var self = this
