@@ -1,5 +1,5 @@
 /*
- * Sprint JavaScript Library v0.7.1
+ * Sprint JavaScript Library v0.7.2
  * http://sprintjs.com
  *
  * Copyright (c) 2014, 2015 Benjamin De Cock
@@ -224,31 +224,6 @@ var Sprint;
         prt = prt.parentElement
       }
     })
-    return Sprint(removeDuplicates(dom))
-  }
-
-  function findDomElements(elementsToFind, returnParent) {
-    elementsToFind = elementsToFind instanceof Init ? elementsToFind.get() : [elementsToFind]
-    var elementsToFindLen = elementsToFind.length
-    var dom = []
-
-    for (var i = 0; i < this.length; i++) {
-      var el = this.get(i)
-      if (el.nodeType > 1) return
-      var descendants = selectElements("*", el)
-      var descendantsLen = descendants.length
-      for (var j = 0; j < descendantsLen; j++) {
-        for (var k = 0; k < elementsToFindLen; k++) {
-          if (descendants[j] == elementsToFind[k]) {
-            var returnedElement = returnParent ? this.get(i) : elementsToFind[k]
-            if (elementsToFindLen < 2) {
-              return Sprint(returnedElement)
-            }
-            dom.push(returnedElement)
-          }
-        }
-      }
-    }
     return Sprint(removeDuplicates(dom))
   }
 
@@ -765,7 +740,27 @@ var Sprint;
       }
 
       // .find(element)
-      return findDomElements.call(this, selector)
+      var elementsToFind = selector instanceof Init ? selector.get() : [selector]
+      var elementsToFindLen = elementsToFind.length
+      var elementsFound = []
+      var elementsFoundLen = 0
+
+      for (var i = 0; i < this.length; i++) {
+        var el = this.get(i)
+        if (el.nodeType > 1) continue
+        // check if each element in `this` contains the elements to find
+        for (var j = 0; j < elementsToFindLen; j++) {
+          var elementToFind = elementsToFind[j]
+          if (!el.contains(elementToFind)) continue
+          elementsFound[elementsFoundLen++] = elementToFind
+          if (elementsFoundLen < elementsToFindLen) continue
+          // everything has been found, return results
+          return Sprint(elementsFound)
+        }
+      }
+
+      // some elements in elementsToFind weren't descendants of `this`
+      return Sprint(elementsFound)
     },
     first: function() {
       return this.eq(0)
@@ -787,8 +782,17 @@ var Sprint;
           return this
         }, false)
       }
+
       // .has(contained)
-      return findDomElements.call(this, selector, true)
+      var result = []
+      var i = this.length
+      while (i--) {
+        var el = this.get(i)
+        if (!el.contains(selector)) continue
+        result.push(el)
+        break
+      }
+      return Sprint(result)
     },
     hasClass: function(name) {
       var i = this.length
