@@ -1,5 +1,5 @@
 /*
- * Sprint JavaScript Library v0.7.0
+ * Sprint JavaScript Library v0.7.1
  * http://sprintjs.com
  *
  * Copyright (c) 2014, 2015 Benjamin De Cock
@@ -453,9 +453,9 @@ var Sprint;
     return arr
   }
 
-  function selectAdjacentSiblings(sprintObj, position, selector) {
+  function selectAdjacentSiblings(sprintObj, direction, selector) {
     var dom = []
-    var prop = position + "ElementSibling"
+    var prop = direction + "ElementSibling"
     sprintObj.each(function() {
       var el = this
       while (el = el[prop]) {
@@ -466,8 +466,8 @@ var Sprint;
     return Sprint(removeDuplicates(dom))
   }
 
-  function selectImmediateAdjacentSibling(sprintObj, position, selector) {
-    var prop = position + "ElementSibling"
+  function selectImmediateAdjacentSibling(sprintObj, direction, selector) {
+    var prop = direction + "ElementSibling"
     return sprintObj.map(function() {
       var el = this[prop]
       if (!el || (selector && !sprintObj.is(selector, el))) return
@@ -563,15 +563,14 @@ var Sprint;
     ) {
       this.dom = toArray(selector)
     }
-    else if (typeof selector == "function") {
-      this.dom = [document]
-      document.addEventListener("DOMContentLoaded", selector)
-    }
     else if (selector instanceof Init) {
       return selector
     }
+    else if (typeof selector == "function") {
+      return this.ready(selector)
+    }
     else {
-      // DOM node
+      // assume DOM node
       this.dom = selector ? [selector] : []
     }
     this.length = this.dom.length
@@ -788,7 +787,6 @@ var Sprint;
           return this
         }, false)
       }
-
       // .has(contained)
       return findDomElements.call(this, selector, true)
     },
@@ -1126,6 +1124,11 @@ var Sprint;
     },
     prevAll: function(selector) {
       return selectAdjacentSiblings(this, "previous", selector)
+    },
+    ready: function(handler) {
+      this.dom = [document]
+      this.length = 1
+      return this.on("DOMContentLoaded", handler)
     },
     remove: function(selector) {
       var self = this
