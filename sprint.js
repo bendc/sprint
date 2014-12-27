@@ -740,7 +740,7 @@ var Sprint;
       }
 
       // .find(element)
-      var elementsToFind = selector instanceof Init ? selector.get() : [selector]
+      var elementsToFind = selector.nodeType ? [selector] : selector.get()
       var elementsToFindLen = elementsToFind.length
       var elementsFound = []
       var elementsFoundLen = 0
