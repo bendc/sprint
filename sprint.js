@@ -1,5 +1,5 @@
 /*
- * Sprint JavaScript Library v0.7.2
+ * Sprint JavaScript Library v0.7.3
  * http://sprintjs.com
  *
  * Copyright (c) 2014, 2015 Benjamin De Cock
@@ -694,6 +694,14 @@ var Sprint;
           this.style[prop] = addPx(prop, property[prop])
         }
       })
+    },
+    detach: function() {
+      return this.map(function() {
+        var parent = this.parentElement
+        if (!parent) return
+        parent.removeChild(this)
+        return this
+      }, false)
     },
     each: function(callback) {
       // callback(index, element) where element == this
