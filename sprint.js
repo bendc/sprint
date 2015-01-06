@@ -1265,20 +1265,17 @@ var Sprint;
         return this.each(function() {
           if (this.multiple) {
             self.children().each(function() {
-              selectMatchedValues(this, "selected")
+              this.selected = value.indexOf(this.value) > -1
             })
             return
           }
-          selectMatchedValues(this, "checked")
+          this.checked = value.indexOf(this.value) > -1
         })
       }
       if (typeof value == "function") {
         return this.each(function(i) {
           Sprint(this).val(value.call(this, i, this.value))
         })
-      }
-      function selectMatchedValues(domEl, attr) {
-        domEl[attr] = value.indexOf(domEl.value) < 0 ? false : true
       }
     },
     width: function(value) {
