@@ -41,7 +41,7 @@ var Sprint;
       if (!Element.prototype[name]) continue
       return name
     }
-  })()
+  }())
   var noPx = [
     "animation-delay",
     "animation-duration",
@@ -61,16 +61,16 @@ var Sprint;
     "z-index"
   ]
   var root = document.documentElement
-  var scroll = {
-    root: null,
-    set: function(sprintObj, method, value) {
+  var scroll = (function() {
+    var scrollRoot
+    return function(sprintObj, method, value) {
       // define scroll root element on first run
-      if (!this.root) {
+      if (!scrollRoot) {
         var initialScrollPos = root.scrollTop
         root.scrollTop = initialScrollPos + 1
         var updatedScrollPos = root.scrollTop
         root.scrollTop = initialScrollPos
-        this.root = updatedScrollPos > initialScrollPos
+        scrollRoot = updatedScrollPos > initialScrollPos
           ? root // spec-compliant browsers (like FF34 and IE11)
           : document.body // naughty boys (like Chrome 39 and Safari 8)
       }
@@ -80,7 +80,7 @@ var Sprint;
         var el = sprintObj.get(0)
         if (!el) return
         if (el == window || el == document) {
-          el = scroll.root
+          el = scrollRoot
         }
         return el[method]
       }
@@ -89,12 +89,12 @@ var Sprint;
       return sprintObj.each(function() {
         var el = this
         if (el == window || el == document) {
-          el = scroll.root
+          el = scrollRoot
         }
         el[method] = value
       })
     }
-  }
+  }())
   var wrapMap = {
     legend: {
       intro: "<fieldset>",
@@ -130,8 +130,6 @@ var Sprint;
     wrapMap[tag] = wrapMap.thead
   })
   wrapMap.th = wrapMap.td
-
-  // utils
 
   function addEventListeners(listeners, el) {
     var sprintClone = Sprint(el)
@@ -301,7 +299,7 @@ var Sprint;
           }
           // getElementsByTagName, getElementsByClassName, querySelectorAll
           return toArray(content)
-        })()
+        }())
         var elementsToInsertLen = elementsToInsert.length
 
         this.each(function(index) {
@@ -1186,10 +1184,10 @@ var Sprint;
       return this.before(newContent).remove()
     },
     scrollLeft: function(value) {
-      return scroll.set(this, "scrollLeft", value)
+      return scroll(this, "scrollLeft", value)
     },
     scrollTop: function(value) {
-      return scroll.set(this, "scrollTop", value)
+      return scroll(this, "scrollTop", value)
     },
     siblings: function(selector) {
       var siblings = []
@@ -1306,4 +1304,4 @@ var Sprint;
   if (window.$ == null) {
     window.$ = Sprint
   }
-})();
+}());
