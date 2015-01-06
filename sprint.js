@@ -12,6 +12,41 @@ var Sprint;
 (function() {
   "use strict"
 
+  var addPx = (function() {
+    var noPx = [
+      "animation-delay",
+      "animation-duration",
+      "animation-iteration-count",
+      "column-count",
+      "flex-grow",
+      "flex-shrink",
+      "font-weight",
+      "line-height",
+      "opacity",
+      "order",
+      "orphans",
+      "transition",
+      "transition-delay",
+      "transition-duration",
+      "widows",
+      "z-index"
+    ]
+    var noPxLen = noPx.length
+
+    return function addPx(cssProperty, value) {
+      var i = noPxLen
+      while (i--) {
+        if (noPx[i] == cssProperty) {
+          return value
+        }
+      }
+      var stringValue = typeof value == "string" ? value : value.toString()
+      if (value && !/\D/.test(stringValue)) {
+        stringValue += "px"
+      }
+      return stringValue
+    }
+  }())
   var domMethods = {
     afterbegin: function(el) {
       this.insertBefore(el, this.firstChild)
@@ -42,24 +77,6 @@ var Sprint;
       return name
     }
   }())
-  var noPx = [
-    "animation-delay",
-    "animation-duration",
-    "animation-iteration-count",
-    "column-count",
-    "flex-grow",
-    "flex-shrink",
-    "font-weight",
-    "line-height",
-    "opacity",
-    "order",
-    "orphans",
-    "transition",
-    "transition-delay",
-    "transition-duration",
-    "widows",
-    "z-index"
-  ]
   var root = document.documentElement
   var scroll = (function() {
     var scrollRoot
@@ -145,20 +162,6 @@ var Sprint;
         sprintClone.on(event, handlers[j])
       }
     }
-  }
-
-  function addPx(cssProperty, value) {
-    var i = noPx.length
-    while (i--) {
-      if (noPx[i] == cssProperty) {
-        return value
-      }
-    }
-    var stringValue = typeof value == "string" ? value : value.toString()
-    if (value && !/\D/.test(stringValue)) {
-      stringValue += "px"
-    }
-    return stringValue
   }
 
   function createDOM(HTMLString) {
