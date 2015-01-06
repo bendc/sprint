@@ -1,5 +1,5 @@
 /*
- * Sprint JavaScript Library v0.7.3
+ * Sprint JavaScript Library v0.7.4
  * http://sprintjs.com
  *
  * Copyright (c) 2014, 2015 Benjamin De Cock
@@ -426,12 +426,13 @@ var Sprint;
     return arr
   }
 
-  function selectAdjacentSiblings(sprintObj, direction, selector) {
+  function selectAdjacentSiblings(sprintObj, direction, selector, until) {
     var dom = []
     var prop = direction + "ElementSibling"
     sprintObj.each(function() {
       var el = this
       while (el = el[prop]) {
+        if (until && sprintObj.is(until, el)) break
         if (selector && !sprintObj.is(selector, el)) continue
         dom.push(el)
       }
@@ -950,6 +951,9 @@ var Sprint;
     nextAll: function(selector) {
       return selectAdjacentSiblings(this, "next", selector)
     },
+    nextUntil: function(selector, filter) {
+      return selectAdjacentSiblings(this, "next", filter, selector)
+    },
     not: function(selector) {
       var isFunc = typeof selector == "function"
       var self = this
@@ -1134,6 +1138,9 @@ var Sprint;
     },
     prevAll: function(selector) {
       return selectAdjacentSiblings(this, "previous", selector)
+    },
+    prevUntil: function(selector, filter) {
+      return selectAdjacentSiblings(this, "previous", filter, selector)
     },
     ready: function(handler) {
       this.dom = [document]
