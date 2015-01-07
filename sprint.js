@@ -341,6 +341,10 @@ var Sprint;
     }
   }
 
+  function isNamespaced(event) {
+    return /\./.test(event)
+  }
+
   function manipulateClass(method, className, bool) {
     if (className == null) {
       if (method == "add") {
@@ -470,6 +474,10 @@ var Sprint;
       return toArray(context.getElementsByTagName(selector))
     }
     return toArray(context.querySelectorAll(selector))
+  }
+
+  function splitNamespaces(event) {
+    return event.split(".")
   }
 
   function toArray(obj) {
@@ -1099,7 +1107,6 @@ var Sprint;
         if (!this.sprintEventListeners) {
           this.sprintEventListeners = {}
         }
-
         var i = eventsLen
         while (i--) {
           var event = events[i]
@@ -1107,7 +1114,7 @@ var Sprint;
             this.sprintEventListeners[event] = []
           }
           this.sprintEventListeners[event].push(handler)
-          this.addEventListener(event, handler)
+          this.addEventListener(isNamespaced(event) ? splitNamespaces(event)[0] : event, handler)
         }
       })
     },
