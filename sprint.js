@@ -1075,6 +1075,7 @@ var Sprint;
       })
       return Sprint(dom)
     },
+    /*
     on: function(type, callback) {
       return this.each(function() {
         if (!this.sprintEventListeners) {
@@ -1085,6 +1086,29 @@ var Sprint;
         }
         this.sprintEventListeners[type].push(callback)
         this.addEventListener(type, callback)
+      })
+    },
+    */
+    on: function() {
+      var argsLen = arguments.length
+      var events = arguments[0].trim().split(" ")
+      var eventsLen = events.length
+      var handler = arguments[argsLen - 1]
+
+      return this.each(function() {
+        if (!this.sprintEventListeners) {
+          this.sprintEventListeners = {}
+        }
+
+        var i = eventsLen
+        while (i--) {
+          var event = events[i]
+          if (!this.sprintEventListeners[event]) {
+            this.sprintEventListeners[event] = []
+          }
+          this.sprintEventListeners[event].push(handler)
+          this.addEventListener(event, handler)
+        }
       })
     },
     parent: function(selector) {
