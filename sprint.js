@@ -31,15 +31,10 @@ var Sprint;
       "widows",
       "z-index"
     ]
-    var noPxLen = noPx.length
 
     return function addPx(cssProperty, value) {
-      var i = noPxLen
-      while (i--) {
-        if (noPx[i] == cssProperty) {
-          return value
-        }
-      }
+      if (inArray(cssProperty, noPx)) return value
+
       var stringValue = typeof value == "string" ? value : value.toString()
       if (value && !/\D/.test(stringValue)) {
         stringValue += "px"
@@ -228,6 +223,28 @@ var Sprint;
     return Sprint(removeDuplicates(dom))
   }
 
+  function getEventNameFromPotentialNamespace(event) {
+    if (isNamespaced(event)) {
+      return splitNamespaces(event)[0]
+    }
+    return event
+  }
+
+  function getEventsToRemove(domElement, event) {
+    /*
+     * Returns an array with the sprintEventListeners events matching potentially
+     * incomplete event names passed to .off().
+     * Example: .off("click.myPlugin") and .off("click.simple") would both remove a
+     * "click.myPlugin.simple" event.
+     */
+    var domElementEvents = Object.keys(domElement.sprintEventListeners)
+    return domElementEvents.filter(function(prop) {
+      return splitNamespaces(event).every(function(name) {
+        return inArray(name, splitNamespaces(prop))
+      })
+    })
+  }
+
   function getSetDimension(obj, prop, value) {
     // get
     if (value == null) {
@@ -341,6 +358,14 @@ var Sprint;
     }
   }
 
+  function inArray(el, arr) {
+    var i = arr.length
+    while (i--) {
+      if (arr[i] === el) return true
+    }
+    return false
+  }
+
   function isNamespaced(event) {
     return /\./.test(event)
   }
@@ -404,6 +429,28 @@ var Sprint;
     return clean
   }
 
+  var removeEvent = (function() {
+    function removeListener(el, event) {
+      return function(handler) {
+        el.removeEventListener(
+          getEventNameFromPotentialNamespace(event), handler
+        )
+      }
+    }
+    return function(el) {
+      return function(event) {
+        el.sprintEventListeners[event].forEach(removeListener(el, event))
+        el.sprintEventListeners[event] = []
+      }
+    }
+  }())
+
+  function removeEvents(el) {
+    return function(event) {
+      getEventsToRemove(el, event).forEach(removeEvent(el))
+    }
+  }
+
   function sanitize(arr, flattenObjects) {
     // Remove null's and optionally flatten Sprint objects.
     var arrLen = arr.length
@@ -412,11 +459,11 @@ var Sprint;
     // Check if arr needs to be sanitized first (significant perf boost for the most common case)
     while (i--) {
       // arr needs to be sanitized
-      if (arr[i] == null || (flattenObjects && arr[i] instanceof Init)) {
+      if (!arr[i] || (flattenObjects && arr[i] instanceof Init)) {
         var sanitized = []
         for (var j = 0; j < arrLen; j++) {
           var el = arr[j]
-          if (el == null) continue
+          if (!el) continue
           if (flattenObjects && el instanceof Init) {
             for (var k = 0; k < el.length; k++) {
               sanitized.push(el.get(k))
@@ -477,7 +524,7 @@ var Sprint;
   }
 
   function splitNamespaces(event) {
-    return event.split(".")
+    return sanitize(event.split("."))
   }
 
   function toArray(obj) {
@@ -978,6 +1025,22 @@ var Sprint;
         return this
       }, false)
     },
+    off: function() {
+      var argsLen = arguments.length
+      var events = arguments[0].trim().split(" ")
+      var eventsLen = events.length
+      var handler = arguments[argsLen - 1]
+
+      // .off(events)
+      if (argsLen == 1) {
+        return this.each(function() {
+          var self = this
+          if (!self.sprintEventListeners) return
+          events.forEach(removeEvents(self))
+        })
+      }
+    },
+    /*
     off: function(type, callback) {
       switch (arguments.length) {
         // .off()
@@ -1030,6 +1093,7 @@ var Sprint;
           })
       }
     },
+    */
     offset: function(coordinates) {
       if (!coordinates) {
         var el = this.get(0)
@@ -1083,20 +1147,6 @@ var Sprint;
       })
       return Sprint(dom)
     },
-    /*
-    on: function(type, callback) {
-      return this.each(function() {
-        if (!this.sprintEventListeners) {
-          this.sprintEventListeners = {}
-        }
-        if (!this.sprintEventListeners[type]) {
-          this.sprintEventListeners[type] = []
-        }
-        this.sprintEventListeners[type].push(callback)
-        this.addEventListener(type, callback)
-      })
-    },
-    */
     on: function() {
       var argsLen = arguments.length
       var events = arguments[0].trim().split(" ")
@@ -1114,7 +1164,7 @@ var Sprint;
             this.sprintEventListeners[event] = []
           }
           this.sprintEventListeners[event].push(handler)
-          this.addEventListener(isNamespaced(event) ? splitNamespaces(event)[0] : event, handler)
+          this.addEventListener(getEventNameFromPotentialNamespace(event), handler)
         }
       })
     },
