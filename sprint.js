@@ -185,7 +185,7 @@ var Sprint;
     if (el.nodeType > 1) return
 
     // Duplicate event listeners for the parent element...
-    var listeners = el.sprintEventListeners
+    var listeners = getEvents(el)
     listeners && addEventListeners(listeners, clone)
 
     // ... and its descendants.
@@ -196,7 +196,7 @@ var Sprint;
     var cloneDescendants
 
     for (var i = 0; i < descendantsLen; i++) {
-      var listeners = descendants[i].sprintEventListeners
+      var listeners = getEvents(descendants[i])
       if (!listeners) continue
       if (!cloneDescendants) {
         cloneDescendants = selectElements("*", clone)
@@ -230,6 +230,10 @@ var Sprint;
     return event
   }
 
+  function getEvents(domElement) {
+    return domElement.sprintEventListeners
+  }
+
   function getEventsToRemove(domElement, event) {
     /*
      * Returns an array with the sprintEventListeners events matching potentially
@@ -237,8 +241,7 @@ var Sprint;
      * Example: .off("click.myPlugin") and .off("click.simple") would both remove a
      * "click.myPlugin.simple" event.
      */
-    var domElementEvents = Object.keys(domElement.sprintEventListeners)
-    return domElementEvents.filter(function(prop) {
+    return Object.keys(getEvents(domElement)).filter(function(prop) {
       return splitNamespaces(event).every(function(name) {
         return inArray(name, splitNamespaces(prop))
       })
@@ -429,6 +432,7 @@ var Sprint;
     return clean
   }
 
+  /*
   var removeEvent = (function() {
     function removeListener(el, event) {
       return function(handler) {
@@ -439,15 +443,44 @@ var Sprint;
     }
     return function(el) {
       return function(event) {
-        el.sprintEventListeners[event].forEach(removeListener(el, event))
-        el.sprintEventListeners[event] = []
+        getEvents(el)[event].forEach(removeListener(el, event))
+        getEvents(el)[event] = []
       }
     }
   }())
 
-  function removeEvents(el) {
+  function removeMatchedEvents(el) {
     return function(event) {
       getEventsToRemove(el, event).forEach(removeEvent(el))
+    }
+  }
+  */
+
+  var removeEvent = (function() {
+    function removeListener(el, event, namedHandler) {
+      return function(registeredHandler) {
+        if (namedHandler && namedHandler !== registeredHandler) return
+        el.removeEventListener(
+          getEventNameFromPotentialNamespace(event), registeredHandler
+        )
+      }
+    }
+    function clearRegisteredHandlers(registeredHandlers, namedHandler) {
+      return registeredHandlers.filter(function(handler) {
+        return namedHandler && namedHandler !== handler
+      })
+    }
+    return function(el, namedHandler) {
+      return function(event) {
+        getEvents(el)[event].forEach(removeListener(el, event, namedHandler))
+        getEvents(el)[event] = clearRegisteredHandlers(getEvents(el)[event], namedHandler)
+      }
+    }
+  }())
+
+  function removeMatchedEvents(el, namedHandler) {
+    return function(event) {
+      getEventsToRemove(el, event).forEach(removeEvent(el, namedHandler))
     }
   }
 
@@ -1025,75 +1058,19 @@ var Sprint;
         return this
       }, false)
     },
-    off: function() {
-      var argsLen = arguments.length
-      var events = arguments[0].trim().split(" ")
-      var eventsLen = events.length
-      var handler = arguments[argsLen - 1]
-
-      // .off(events)
-      if (argsLen == 1) {
-        return this.each(function() {
-          var self = this
-          if (!self.sprintEventListeners) return
-          events.forEach(removeEvents(self))
-        })
+    off: function(events, handler) {
+      if (events) {
+        events = events.trim().split(" ")
       }
+      return this.each(function() {
+        if (!getEvents(this)) return
+        if (events) {
+          events.forEach(removeMatchedEvents(this, handler))
+          return
+        }
+        Object.keys(getEvents(this)).forEach(removeEvent(this))
+      })
     },
-    /*
-    off: function(type, callback) {
-      switch (arguments.length) {
-        // .off()
-        case 0:
-          return this.each(function() {
-            if (!this.sprintEventListeners) return
-            var events = Object.keys(this.sprintEventListeners)
-            var eventsLen = events.length
-
-            for (var i = 0; i < eventsLen; i++) {
-              var event = events[i]
-              var handlers = this.sprintEventListeners[event]
-              var handlersLen = handlers.length
-
-              for (var j = 0; j < handlersLen; j++) {
-                this.removeEventListener(event, handlers[j])
-              }
-            }
-            this.sprintEventListeners = {}
-          })
-
-        // .off(event)
-        case 1:
-          return this.each(function() {
-            if (!this.sprintEventListeners) return
-            var handlers = this.sprintEventListeners[type]
-            var handlersLen = handlers.length
-
-            for (var i = 0; i < handlersLen; i++) {
-              this.removeEventListener(type, handlers[i])
-            }
-            this.sprintEventListeners[type] = []
-          })
-
-        // .off(event, handler)
-        case 2:
-          return this.each(function() {
-            if (!this.sprintEventListeners) return
-            var updatedSprintEventListeners = []
-            var handlers = this.sprintEventListeners[type]
-            var handlersLen = handlers.length
-
-            for (var i = 0; i < handlersLen; i++) {
-              var handler = handlers[i]
-              callback != handler && updatedSprintEventListeners.push(handler)
-            }
-
-            this.removeEventListener(type, callback)
-            this.sprintEventListeners[type] = updatedSprintEventListeners
-          })
-      }
-    },
-    */
     offset: function(coordinates) {
       if (!coordinates) {
         var el = this.get(0)
@@ -1154,16 +1131,16 @@ var Sprint;
       var handler = arguments[argsLen - 1]
 
       return this.each(function() {
-        if (!this.sprintEventListeners) {
+        if (!getEvents(this)) {
           this.sprintEventListeners = {}
         }
         var i = eventsLen
         while (i--) {
           var event = events[i]
-          if (!this.sprintEventListeners[event]) {
-            this.sprintEventListeners[event] = []
+          if (!getEvents(this)[event]) {
+            getEvents(this)[event] = []
           }
-          this.sprintEventListeners[event].push(handler)
+          getEvents(this)[event].push(handler)
           this.addEventListener(getEventNameFromPotentialNamespace(event), handler)
         }
       })
@@ -1356,11 +1333,11 @@ var Sprint;
         return this.each(function() {
           if (this.multiple) {
             self.children().each(function() {
-              this.selected = value.indexOf(this.value) > -1
+              this.selected = inArray(this.value, value)
             })
             return
           }
-          this.checked = value.indexOf(this.value) > -1
+          this.checked = inArray(this.value, value)
         })
       }
       if (typeof value == "function") {
