@@ -14,8 +14,6 @@ var Sprint;
 
   var addPx = (function() {
     var noPx = [
-      "animation-delay",
-      "animation-duration",
       "animation-iteration-count",
       "column-count",
       "flex-grow",
@@ -25,9 +23,6 @@ var Sprint;
       "opacity",
       "order",
       "orphans",
-      "transition",
-      "transition-delay",
-      "transition-duration",
       "widows",
       "z-index"
     ]
