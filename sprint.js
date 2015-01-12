@@ -1054,6 +1054,12 @@ var Sprint;
       }, false)
     },
     off: function(events, handler) {
+      if (typeof events == "object") {
+        Object.keys(events).forEach(function(event) {
+          this.off(event, events[event])
+        }, this)
+        return this
+      }
       if (events) {
         events = events.trim().split(" ")
       }
