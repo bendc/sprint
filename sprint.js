@@ -1,5 +1,5 @@
 /*
- * Sprint JavaScript Library v0.8.0
+ * Sprint JavaScript Library v0.8.1
  * http://sprintjs.com
  *
  * Copyright (c) 2014, 2015 Benjamin De Cock
@@ -10,135 +10,9 @@
 var Sprint;
 
 (function() {
-  "use strict"
+  "use strict";
 
-  var addPx = (function() {
-    var noPx = [
-      "animation-iteration-count",
-      "column-count",
-      "flex-grow",
-      "flex-shrink",
-      "font-weight",
-      "line-height",
-      "opacity",
-      "order",
-      "orphans",
-      "widows",
-      "z-index"
-    ]
-
-    return function addPx(cssProperty, value) {
-      if (inArray(cssProperty, noPx)) return value
-
-      var stringValue = typeof value == "string" ? value : value.toString()
-      if (value && !/\D/.test(stringValue)) {
-        stringValue += "px"
-      }
-      return stringValue
-    }
-  }())
-  var domMethods = {
-    afterbegin: function(el) {
-      this.insertBefore(el, this.firstChild)
-    },
-    afterend: function(el) {
-      var parent = this.parentElement
-      parent && parent.insertBefore(el, this.nextSibling)
-    },
-    beforebegin: function(el) {
-      var parent = this.parentElement
-      parent && parent.insertBefore(el, this)
-    },
-    beforeend: function(el) {
-      this.appendChild(el)
-    }
-  }
-  var matches = (function() {
-    var names = [
-      "mozMatchesSelector",
-      "webkitMatchesSelector",
-      "msMatchesSelector",
-      "matches"
-    ]
-    var i = names.length
-    while (i--) {
-      var name = names[i]
-      if (!Element.prototype[name]) continue
-      return name
-    }
-  }())
-  var root = document.documentElement
-  var scroll = (function() {
-    var scrollRoot
-    return function(sprintObj, method, value) {
-      // define scroll root element on first run
-      if (!scrollRoot) {
-        var initialScrollPos = root.scrollTop
-        root.scrollTop = initialScrollPos + 1
-        var updatedScrollPos = root.scrollTop
-        root.scrollTop = initialScrollPos
-        scrollRoot = updatedScrollPos > initialScrollPos
-          ? root // spec-compliant browsers (like FF34 and IE11)
-          : document.body // naughty boys (like Chrome 39 and Safari 8)
-      }
-
-      // get scroll position
-      if (value == null) {
-        var el = sprintObj.get(0)
-        if (!el) return
-        if (el == window || el == document) {
-          el = scrollRoot
-        }
-        return el[method]
-      }
-
-      // set scroll position
-      return sprintObj.each(function() {
-        var el = this
-        if (el == window || el == document) {
-          el = scrollRoot
-        }
-        el[method] = value
-      })
-    }
-  }())
-  var wrapMap = {
-    legend: {
-      intro: "<fieldset>",
-      outro: "</fieldset>"
-    },
-    area: {
-      intro: "<map>",
-      outro: "</map>"
-    },
-    param: {
-      intro: "<object>",
-      outro: "</object>"
-    },
-    thead: {
-      intro: "<table>",
-      outro: "</table>"
-    },
-    tr: {
-      intro: "<table><tbody>",
-      outro: "</tbody></table>"
-    },
-    col: {
-      intro: "<table><tbody></tbody><colgroup>",
-      outro: "</colgroup></table>"
-    },
-    td: {
-      intro: "<table><tbody><tr>",
-      outro: "</tr></tbody></table>"
-    }
-  };
-  // elements needing a construct already defined by other elements
-  ["tbody", "tfoot", "colgroup", "caption"].forEach(function(tag) {
-    wrapMap[tag] = wrapMap.thead
-  })
-  wrapMap.th = wrapMap.td
-
-  function addEventListeners(listeners, el) {
+  var addEventListeners = function(listeners, el) {
     var sprintClone = Sprint(el)
     var events = Object.keys(listeners)
     var eventsLen = events.length
@@ -154,7 +28,31 @@ var Sprint;
     }
   }
 
-  function createDOM(HTMLString) {
+  var addPx = (function() {
+    var noPx = [
+      "animation-iteration-count",
+      "column-count",
+      "flex-grow",
+      "flex-shrink",
+      "font-weight",
+      "line-height",
+      "opacity",
+      "order",
+      "orphans",
+      "widows",
+      "z-index"
+    ]
+    return function addPx(cssProperty, value) {
+      if (inArray(cssProperty, noPx)) return value
+      var stringValue = typeof value == "string" ? value : value.toString()
+      if (value && !/\D/.test(stringValue)) {
+        stringValue += "px"
+      }
+      return stringValue
+    }
+  }())
+
+  var createDOM = function(HTMLString) {
     var tmp = document.createElement("div")
     var tag = /[\w:-]+/.exec(HTMLString)[0]
     var inMap = wrapMap[tag]
@@ -175,7 +73,24 @@ var Sprint;
     return node
   }
 
-  function duplicateEventListeners(el, clone) {
+  var domMethods = {
+    afterbegin: function(el) {
+      this.insertBefore(el, this.firstChild)
+    },
+    afterend: function(el) {
+      var parent = this.parentElement
+      parent && parent.insertBefore(el, this.nextSibling)
+    },
+    beforebegin: function(el) {
+      var parent = this.parentElement
+      parent && parent.insertBefore(el, this)
+    },
+    beforeend: function(el) {
+      this.appendChild(el)
+    }
+  }
+
+  var duplicateEventListeners = function(el, clone) {
     // Element nodes only
     if (el.nodeType > 1) return
 
@@ -200,7 +115,7 @@ var Sprint;
     }
   }
 
-  function findAncestors(startAtParent, limitToParent, limitToFirstMatch, selector, context) {
+  var findAncestors = function(startAtParent, limitToParent, limitToFirstMatch, selector, context) {
     var dom = []
     var self = this
     this.each(function() {
@@ -218,18 +133,18 @@ var Sprint;
     return Sprint(removeDuplicates(dom))
   }
 
-  function getEventNameFromPotentialNamespace(event) {
+  var getEventNameFromPotentialNamespace = function(event) {
     if (isNamespaced(event)) {
       return splitNamespaces(event)[0]
     }
     return event
   }
 
-  function getEvents(domElement) {
+  var getEvents = function(domElement) {
     return domElement.sprintEventListeners
   }
 
-  function getEventsToRemove(domElement, event) {
+  var getEventsToRemove = function(domElement, event) {
     /*
      * Returns an array with the sprintEventListeners events matching potentially
      * incomplete event names passed to .off().
@@ -243,7 +158,7 @@ var Sprint;
     })
   }
 
-  function getSetDimension(obj, prop, value) {
+  var getSetDimension = function(obj, prop, value) {
     // get
     if (value == null) {
       var el = obj.get(0)
@@ -275,7 +190,7 @@ var Sprint;
     })
   }
 
-  function insertHTML(position, args) {
+  var insertHTML = function(position, args) {
     var argsLen = args.length
     var contents = args
 
@@ -356,7 +271,7 @@ var Sprint;
     }
   }
 
-  function inArray(el, arr) {
+  var inArray = function(el, arr) {
     var i = arr.length
     while (i--) {
       if (arr[i] === el) return true
@@ -364,11 +279,11 @@ var Sprint;
     return false
   }
 
-  function isNamespaced(event) {
+  var isNamespaced = function(event) {
     return /\./.test(event)
   }
 
-  function manipulateClass(method, className, bool) {
+  var manipulateClass = function(method, className, bool) {
     if (className == null) {
       if (method == "add") {
         return this
@@ -405,7 +320,22 @@ var Sprint;
     })
   }
 
-  function removeDuplicates(arr) {
+  var matches = (function() {
+    var names = [
+      "mozMatchesSelector",
+      "webkitMatchesSelector",
+      "msMatchesSelector",
+      "matches"
+    ]
+    var i = names.length
+    while (i--) {
+      var name = names[i]
+      if (!Element.prototype[name]) continue
+      return name
+    }
+  }())
+
+  var removeDuplicates = function(arr) {
     var clean = []
     var cleanLen = 0
     var arrLen = arr.length
@@ -427,32 +357,8 @@ var Sprint;
     return clean
   }
 
-  /*
   var removeEvent = (function() {
-    function removeListener(el, event) {
-      return function(handler) {
-        el.removeEventListener(
-          getEventNameFromPotentialNamespace(event), handler
-        )
-      }
-    }
-    return function(el) {
-      return function(event) {
-        getEvents(el)[event].forEach(removeListener(el, event))
-        getEvents(el)[event] = []
-      }
-    }
-  }())
-
-  function removeMatchedEvents(el) {
-    return function(event) {
-      getEventsToRemove(el, event).forEach(removeEvent(el))
-    }
-  }
-  */
-
-  var removeEvent = (function() {
-    function removeListener(el, event, namedHandler) {
+    var removeListener = function(el, event, namedHandler) {
       return function(registeredHandler) {
         if (namedHandler && namedHandler !== registeredHandler) return
         el.removeEventListener(
@@ -460,7 +366,7 @@ var Sprint;
         )
       }
     }
-    function clearRegisteredHandlers(registeredHandlers, namedHandler) {
+    var clearRegisteredHandlers = function(registeredHandlers, namedHandler) {
       return registeredHandlers.filter(function(handler) {
         return namedHandler && namedHandler !== handler
       })
@@ -473,13 +379,15 @@ var Sprint;
     }
   }())
 
-  function removeMatchedEvents(el, namedHandler) {
+  var removeMatchedEvents = function(el, namedHandler) {
     return function(event) {
       getEventsToRemove(el, event).forEach(removeEvent(el, namedHandler))
     }
   }
 
-  function sanitize(arr, flattenObjects) {
+  var root = document.documentElement
+
+  var sanitize = function(arr, flattenObjects) {
     // Remove null's and optionally flatten Sprint objects.
     var arrLen = arr.length
     var i = arrLen
@@ -508,7 +416,42 @@ var Sprint;
     return arr
   }
 
-  function selectAdjacentSiblings(sprintObj, direction, selector, until) {
+  var scroll = (function() {
+    var scrollRoot
+    return function(sprintObj, method, value) {
+      // define scroll root element on first run
+      if (!scrollRoot) {
+        var initialScrollPos = root.scrollTop
+        root.scrollTop = initialScrollPos + 1
+        var updatedScrollPos = root.scrollTop
+        root.scrollTop = initialScrollPos
+        scrollRoot = updatedScrollPos > initialScrollPos
+          ? root // spec-compliant browsers (like FF34 and IE11)
+          : document.body // naughty boys (like Chrome 39 and Safari 8)
+      }
+
+      // get scroll position
+      if (value == null) {
+        var el = sprintObj.get(0)
+        if (!el) return
+        if (el == window || el == document) {
+          el = scrollRoot
+        }
+        return el[method]
+      }
+
+      // set scroll position
+      return sprintObj.each(function() {
+        var el = this
+        if (el == window || el == document) {
+          el = scrollRoot
+        }
+        el[method] = value
+      })
+    }
+  }())
+
+  var selectAdjacentSiblings = function(sprintObj, direction, selector, until) {
     var dom = []
     var prop = direction + "ElementSibling"
     sprintObj.each(function() {
@@ -522,7 +465,7 @@ var Sprint;
     return Sprint(removeDuplicates(dom))
   }
 
-  function selectImmediateAdjacentSibling(sprintObj, direction, selector) {
+  var selectImmediateAdjacentSibling = function(sprintObj, direction, selector) {
     var prop = direction + "ElementSibling"
     return sprintObj.map(function() {
       var el = this[prop]
@@ -531,7 +474,7 @@ var Sprint;
     }, false)
   }
 
-  function selectElements(selector, context) {
+  var selectElements = function(selector, context) {
     context = context || document
     // class, id, tag name or universal selector
     if (/^[\#.]?[\w-]+$/.test(selector)) {
@@ -551,11 +494,11 @@ var Sprint;
     return toArray(context.querySelectorAll(selector))
   }
 
-  function splitNamespaces(event) {
+  var splitNamespaces = function(event) {
     return sanitize(event.split("."))
   }
 
-  function toArray(obj) {
+  var toArray = function(obj) {
     var arr = []
     var i = obj.length
     while (i--) {
@@ -564,16 +507,8 @@ var Sprint;
     return arr
   }
 
-  function wrap(wrappingElement, variant) {
-    if (typeof wrappingElement == "function") {
-      this.each(function(i) {
-        Sprint(this)[variant == "inner" ? "wrapInner" : "wrap"](wrappingElement.call(this, i))
-      })
-    }
-    else {
-      variant == "all" ? callback.call(this) : this.each(callback)
-    }
-    function callback() {
+  var wrap = (function() {
+    var callback = function(wrappingElement, variant) {
       var wrap = Sprint(wrappingElement).clone(true).get(0)
       var innerWrap = wrap
       if (!wrap || this.nodeType > 1) return
@@ -596,12 +531,60 @@ var Sprint;
         prt.insertBefore(wrap, next)
       }
     }
-    return this
-  }
+    return function(wrappingElement, variant) {
+      if (typeof wrappingElement == "function") {
+        this.each(function(i) {
+          Sprint(this)[variant == "inner" ? "wrapInner" : "wrap"](wrappingElement.call(this, i))
+        })
+      }
+      else {
+        variant == "all"
+          ? callback.call(this, wrappingElement, variant)
+          : this.each(function() { callback.call(this, wrappingElement, variant) })
+      }
+      return this
+    }
+  }())
+
+  var wrapMap = {
+    legend: {
+      intro: "<fieldset>",
+      outro: "</fieldset>"
+    },
+    area: {
+      intro: "<map>",
+      outro: "</map>"
+    },
+    param: {
+      intro: "<object>",
+      outro: "</object>"
+    },
+    thead: {
+      intro: "<table>",
+      outro: "</table>"
+    },
+    tr: {
+      intro: "<table><tbody>",
+      outro: "</tbody></table>"
+    },
+    col: {
+      intro: "<table><tbody></tbody><colgroup>",
+      outro: "</colgroup></table>"
+    },
+    td: {
+      intro: "<table><tbody><tr>",
+      outro: "</tr></tbody></table>"
+    }
+  };
+  // elements needing a construct already defined by other elements
+  ["tbody", "tfoot", "colgroup", "caption"].forEach(function(tag) {
+    wrapMap[tag] = wrapMap.thead
+  })
+  wrapMap.th = wrapMap.td
 
   // constructor
 
-  function Init(selector, context) {
+  var Init = function(selector, context) {
     if (typeof selector == "string") {
       // create DOM element
       if (selector[0] == "<") {
