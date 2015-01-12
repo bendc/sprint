@@ -1120,25 +1120,32 @@ var Sprint;
       return Sprint(dom)
     },
     on: function(events, handler) {
-      var eventObject = !handler
-      var eventsArr = eventObject ? Object.keys(events) : events.trim().split(" ")
-      var eventsLen = eventsArr.length
+      // .on(events, handler)
+      if (handler) {
+        var eventsArr = events.trim().split(" ")
+        var eventsLen = eventsArr.length
 
-      return this.each(function() {
-        if (!getEvents(this)) {
-          this.sprintEventListeners = {}
-        }
-        var i = eventsLen
-        while (i--) {
-          var event = eventsArr[i]
-          var callback = eventObject ? events[event] : handler
-          if (!getEvents(this)[event]) {
-            getEvents(this)[event] = []
+        return this.each(function() {
+          if (!getEvents(this)) {
+            this.sprintEventListeners = {}
           }
-          getEvents(this)[event].push(callback)
-          this.addEventListener(getEventNameFromPotentialNamespace(event), callback)
-        }
-      })
+          var i = eventsLen
+          while (i--) {
+            var event = eventsArr[i]
+            if (!getEvents(this)[event]) {
+              getEvents(this)[event] = []
+            }
+            getEvents(this)[event].push(handler)
+            this.addEventListener(getEventNameFromPotentialNamespace(event), handler)
+          }
+        })
+      }
+
+      // .on({ event: handler })
+      Object.keys(events).forEach(function(event) {
+        this.on(event, events[event])
+      }, this)
+      return this
     },
     parent: function(selector) {
       return findAncestors.call(this, true, true, false, selector)
