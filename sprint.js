@@ -1,5 +1,5 @@
 /*
- * Sprint JavaScript Library v0.7.4
+ * Sprint JavaScript Library v0.8.0
  * http://sprintjs.com
  *
  * Copyright (c) 2014, 2015 Benjamin De Cock
