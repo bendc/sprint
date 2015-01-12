@@ -1119,11 +1119,10 @@ var Sprint;
       })
       return Sprint(dom)
     },
-    on: function() {
-      var argsLen = arguments.length
-      var events = arguments[0].trim().split(" ")
-      var eventsLen = events.length
-      var handler = arguments[argsLen - 1]
+    on: function(events, handler) {
+      var eventObject = !handler
+      var eventsArr = eventObject ? Object.keys(events) : events.trim().split(" ")
+      var eventsLen = eventsArr.length
 
       return this.each(function() {
         if (!getEvents(this)) {
@@ -1131,12 +1130,13 @@ var Sprint;
         }
         var i = eventsLen
         while (i--) {
-          var event = events[i]
+          var event = eventsArr[i]
+          var callback = eventObject ? events[event] : handler
           if (!getEvents(this)[event]) {
             getEvents(this)[event] = []
           }
-          getEvents(this)[event].push(handler)
-          this.addEventListener(getEventNameFromPotentialNamespace(event), handler)
+          getEvents(this)[event].push(callback)
+          this.addEventListener(getEventNameFromPotentialNamespace(event), callback)
         }
       })
     },
