@@ -205,7 +205,7 @@ var Sprint;
 
     for (var i = 0; i < argsLen; i++) {
       var content = contents[i]
-      if (typeof content == "string") {
+      if (typeof content == "string" || typeof content == "number") {
         this.each(function() {
           this.insertAdjacentHTML(position, content)
         })
@@ -224,7 +224,7 @@ var Sprint;
             return content.get()
           }
           if (Array.isArray(content)) {
-            return sanitize(content, true)
+            return sanitize(content, true, true)
           }
           // DOM node
           if (content.nodeType) {
@@ -387,23 +387,33 @@ var Sprint;
 
   var root = document.documentElement
 
-  var sanitize = function(arr, flattenObjects) {
-    // Remove null's and optionally flatten Sprint objects.
+  var sanitize = function(arr, flattenObjects, requireDomNodes) {
+    /*
+     * Remove null's from array. Optionally, flatten Sprint objects and convert strings and numbers
+     * to DOM text nodes.
+     */
     var arrLen = arr.length
     var i = arrLen
 
     // Check if arr needs to be sanitized first (significant perf boost for the most common case)
     while (i--) {
       // arr needs to be sanitized
-      if (!arr[i] || (flattenObjects && arr[i] instanceof Init)) {
+      if ( (!arr[i] && arr[i] !== 0)
+        || (flattenObjects && arr[i] instanceof Init)
+        || (requireDomNodes && (typeof arr[i] == "string" || typeof arr[i] == "number"))
+      ) {
         var sanitized = []
         for (var j = 0; j < arrLen; j++) {
           var el = arr[j]
-          if (!el) continue
+          if (!el && el !== 0) continue
           if (flattenObjects && el instanceof Init) {
             for (var k = 0; k < el.length; k++) {
               sanitized.push(el.get(k))
             }
+            continue
+          }
+          if (requireDomNodes && (typeof el == "string" || typeof el == "number")) {
+            sanitized.push(document.createTextNode(el))
             continue
           }
           sanitized.push(el)
