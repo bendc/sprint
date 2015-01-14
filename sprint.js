@@ -1304,6 +1304,11 @@ var Sprint;
     toggleClass: function(className, bool) {
       return manipulateClass.call(this, "toggle", className, bool)
     },
+    trigger: function(event) {
+      return this.each(function() {
+        this.dispatchEvent(new Event(event))
+      })
+    },
     unwrap: function() {
       this.parent().each(function() {
         if (this == document.body || this == root) return
