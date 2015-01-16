@@ -1,5 +1,5 @@
 /*
- * Sprint JavaScript Library v0.9.0
+ * Sprint JavaScript Library v0.9.1
  * http://sprintjs.com
  *
  * Copyright (c) 2014, 2015 Benjamin De Cock
@@ -1320,13 +1320,28 @@ var Sprint;
       return manipulateClass.call(this, "toggle", className, bool)
     },
     trigger: function(event) {
-      var config = {
-        bubbles: true,
-        cancelable: true
+      // IE polyfill
+      if (!window.CustomEvent || typeof window.CustomEvent !== "function") {
+        var CustomEvent = function(event, params) {
+          var evt
+          params = params || {
+              bubbles: false,
+              cancelable: false,
+              detail: undefined
+          }
+          evt = document.createEvent("CustomEvent")
+          evt.initCustomEvent(event, params.bubbles, params.cancelable, params.detail)
+          return evt
+        }
+        CustomEvent.prototype = window.Event.prototype
+        window.CustomEvent = CustomEvent
       }
       return this.each(function() {
         getEventsToRemove(this, event).forEach(function(matchedEvent) {
-          this.dispatchEvent(new Event(matchedEvent, config))
+          this.dispatchEvent(new CustomEvent(matchedEvent, {
+            bubbles: true,
+            cancelable: true
+          }))
         }, this)
       })
     },
