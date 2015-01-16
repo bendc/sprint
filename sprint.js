@@ -1,5 +1,5 @@
 /*
- * Sprint JavaScript Library v0.9.1
+ * Sprint JavaScript Library v0.9.2
  * http://sprintjs.com
  *
  * Copyright (c) 2014, 2015 Benjamin De Cock
@@ -1320,9 +1320,9 @@ var Sprint;
         var CustomEvent = function(event, params) {
           var evt
           params = params || {
-              bubbles: false,
-              cancelable: false,
-              detail: undefined
+            bubbles: false,
+            cancelable: false,
+            detail: undefined
           }
           evt = document.createEvent("CustomEvent")
           evt.initCustomEvent(event, params.bubbles, params.cancelable, params.detail)
@@ -1360,11 +1360,6 @@ var Sprint;
         }
         return el.value
       }
-      if (typeof value == "string") {
-        return this.each(function() {
-          this.value = value
-        })
-      }
       if (Array.isArray(value)) {
         var self = this
         return this.each(function() {
@@ -1382,6 +1377,9 @@ var Sprint;
           Sprint(this).val(value.call(this, i, this.value))
         })
       }
+      return this.each(function() {
+        this.value = value
+      })
     },
     width: function(value) {
       return getSetDimension(this, "width", value)
