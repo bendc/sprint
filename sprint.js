@@ -910,17 +910,15 @@ var Sprint;
         if (!el) return
         return el.innerHTML
       }
-      if (typeof htmlString == "string") {
-        return this.each(function() {
-          this.innerHTML = htmlString
-        })
-      }
       if (typeof htmlString == "function") {
         return this.each(function(i) {
           var content = htmlString.call(this, i, this.innerHTML)
           Sprint(this).html(content)
         })
       }
+      return this.each(function() {
+        this.innerHTML = htmlString
+      })
     },
     index: function(el) {
       if (!this.length) return
@@ -1132,15 +1130,12 @@ var Sprint;
       // .on(events, handler)
       if (handler) {
         var eventsArr = events.trim().split(" ")
-        var eventsLen = eventsArr.length
 
         return this.each(function() {
           if (!getEvents(this)) {
             this.sprintEventListeners = {}
           }
-          var i = eventsLen
-          while (i--) {
-            var event = eventsArr[i]
+          eventsArr.forEach(function(event) {
             if (!getEvents(this)[event]) {
               getEvents(this)[event] = []
             }
@@ -1151,7 +1146,7 @@ var Sprint;
             this.addEventListener(event, handler)
             if (!isNamespaced(event)) return
             this.addEventListener(getEventFromNamespace(event), handler)
-          }
+          }, this)
         })
       }
 
