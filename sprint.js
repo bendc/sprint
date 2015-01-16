@@ -1,5 +1,5 @@
 /*
- * Sprint JavaScript Library v0.8.1
+ * Sprint JavaScript Library v0.9.0
  * http://sprintjs.com
  *
  * Copyright (c) 2014, 2015 Benjamin De Cock
@@ -133,11 +133,8 @@ var Sprint;
     return Sprint(removeDuplicates(dom))
   }
 
-  var getEventNameFromPotentialNamespace = function(event) {
-    if (isNamespaced(event)) {
-      return splitNamespaces(event)[0]
-    }
-    return event
+  var getEventFromNamespace = function(event) {
+    return splitNamespaces(event)[0]
   }
 
   var getEvents = function(domElement) {
@@ -358,12 +355,25 @@ var Sprint;
   }
 
   var removeEvent = (function() {
+    var isHandlerShared = function(el, event, registeredHandler) {
+      var similarEventsHandlers = Object.keys(getEvents(el)).filter(function(prop) {
+        return getEventFromNamespace(event) === getEventFromNamespace(prop)
+      }).map(function(ev) {
+        return getEvents(el)[ev]
+      }).reduce(function(a, b) {
+        return a.concat(b)
+      }).filter(function(handler) {
+        return handler === registeredHandler
+      })
+      if (similarEventsHandlers.length < 2) return false
+      return true
+    }
     var removeListener = function(el, event, namedHandler) {
       return function(registeredHandler) {
         if (namedHandler && namedHandler !== registeredHandler) return
-        el.removeEventListener(
-          getEventNameFromPotentialNamespace(event), registeredHandler
-        )
+        el.removeEventListener(event, registeredHandler)
+        if (!isNamespaced(event) || isHandlerShared(el, event, registeredHandler)) return
+        el.removeEventListener(getEventFromNamespace(event), registeredHandler)
       }
     }
     var clearRegisteredHandlers = function(registeredHandlers, namedHandler) {
@@ -1135,7 +1145,12 @@ var Sprint;
               getEvents(this)[event] = []
             }
             getEvents(this)[event].push(handler)
-            this.addEventListener(getEventNameFromPotentialNamespace(event), handler)
+
+            // Ensure we add both the standard event (eg: "click") and the full event
+            // (eg: "click.foo") in order to be able to trigger them manually and programmatically.
+            this.addEventListener(event, handler)
+            if (!isNamespaced(event)) return
+            this.addEventListener(getEventFromNamespace(event), handler)
           }
         })
       }
@@ -1305,8 +1320,14 @@ var Sprint;
       return manipulateClass.call(this, "toggle", className, bool)
     },
     trigger: function(event) {
+      var config = {
+        bubbles: true,
+        cancelable: true
+      }
       return this.each(function() {
-        this.dispatchEvent(new Event(event))
+        getEventsToRemove(this, event).forEach(function(matchedEvent) {
+          this.dispatchEvent(new Event(matchedEvent, config))
+        }, this)
       })
     },
     unwrap: function() {
