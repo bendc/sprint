@@ -8,6 +8,12 @@ Sprint has a familiar, jQuery-like chainable API:
 $("div").addClass("new").append("<p>Hi Sprint</p>");
 ```
 
+Install from bower :
+
+```sh
+bower install bendc/sprint
+```
+
 ## Philosophy
 
 Sprint is an alternative—not a replacement—for jQuery. jQuery offers more features, handles more edge cases and supports more browsers. Sprint is just a thin layer making the DOM friendlier without sacrificing on performance.
