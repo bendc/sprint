@@ -1,0 +1,10 @@
+{
+  "name": "sprintjs",
+  "version": "0.1.0",
+  "description": "A tiny, lightning fast jQuery-like library for modern browsers.",
+  "main": "./sprint.js",
+  "license": "MIT",
+  "ignore": [],
+  "dependencies": {
+  }
+}
