@@ -1,0 +1,16 @@
+{
+  "name": "sprintjs",
+  "version": "0.1.0",
+  "description": "A tiny, lightning fast jQuery-like library for modern browsers.",
+  "main": "sprint.js",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:bendc/sprint.git"
+  },
+  "author": "Benjamin De Cock",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/bendc/sprint/issues"
+  },
+  "homepage": "https://github.com/bendc/sprint"
+}
