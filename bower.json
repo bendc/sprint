@@ -1,0 +1,8 @@
+{
+  "name": "sprintjs",
+  "version": "0.1.0",
+  "homepage": "https://github.com/bendc/sprint",
+  "main": "sprint.js",
+  "license": "MIT",
+  "ignore": []
+}
