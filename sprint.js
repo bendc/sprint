@@ -155,17 +155,28 @@ var Sprint;
     })
   }
 
+  var removeNaN = function(arr) {
+    for (var i = 0; i < arr.length; i++) {
+      if (arr[i] != arr[i]) arr[i] = 0
+    }
+    return arr
+  }
+
   var getSetDimension = function(obj, prop, value) {
     // get
     if (value == null) {
       var el = obj.get(0)
-      if (!el || el.nodeType > 1) return
+      // return if el is neither element nor document node
+      if (!el || (el.nodeType > 1 && el.nodeType != 9)) return
       var capitalizedProp = prop[0].toUpperCase() + prop.substring(1)
       // dimension of HTML document
       if (el == document) {
-        var offset = root["offset" + capitalizedProp]
-        var inner = window["inner" + capitalizedProp]
-        return offset > inner ? offset : inner
+        return Math.max.apply(this, removeNaN([
+          el.body["scroll" + capitalizedProp],
+          el.body["offset" + capitalizedProp],
+          root["scroll" + capitalizedProp],
+          root["offset" + capitalizedProp]
+        ]))
       }
       // dimension of viewport
       if (el == window) {
