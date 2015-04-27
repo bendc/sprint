@@ -50,7 +50,15 @@ var Sprint;
       }
       return stringValue
     }
-  }())
+  }());
+
+  var createDelegator = function(handler, selector){
+    return function(e){
+      if (Sprint(e.target).is(selector)){
+        handler.apply(e.target, arguments);
+      }
+    }
+  };
 
   var createDOM = function(HTMLString) {
     var tmp = document.createElement("div")
@@ -1126,9 +1134,15 @@ var Sprint;
       })
       return Sprint(dom)
     },
-    on: function(events, handler) {
+    on: function(events, selector, handler) {
+      if(typeof selector !== "string"){
+        handler = selector;
+      }
       // .on(events, handler)
       if (handler) {
+        if(selector){
+          handler = createDelegator(handler, selector);
+        }
         var eventsArr = events.trim().split(" ")
 
         return this.each(function() {

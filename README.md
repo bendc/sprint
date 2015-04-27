@@ -126,7 +126,7 @@ The methods supported by Sprint are, for the most part, identical to jQuery's. T
 * [off](http://api.jquery.com/off/) - _no support for selector_
 * [offset](http://api.jquery.com/offset/)
 * [offsetParent](http://api.jquery.com/offsetParent/)
-* [on](http://api.jquery.com/on/) - _no support for selector and data_
+* [on](http://api.jquery.com/on/) - _no support for data_
 * [parent](http://api.jquery.com/parent/)
 * [parents](http://api.jquery.com/parents/)
 * [position](http://api.jquery.com/position/)
