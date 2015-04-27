@@ -1403,5 +1403,7 @@ var Sprint;
 
   if (window.$ == null) {
     window.$ = Sprint
+  } else {
+    window.S = Sprint
   }
 }());
