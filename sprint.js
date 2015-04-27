@@ -7,8 +7,6 @@
  * http://sprintjs.com/license
  */
 
-var Sprint;
-
 (function() {
   "use strict";
 
@@ -1397,11 +1395,21 @@ var Sprint;
 
   // public
 
-  Sprint = function(selector, context) {
+  var Sprint = function(selector, context) {
     return new Init(selector, context)
   }
 
-  if (window.$ == null) {
-    window.$ = Sprint
+  if (typeof define === "function" && define.amd) {
+    define(function() {
+      return Sprint
+    })
+  } else if (typeof module !== "undefined" && module.exports) {
+    module.exports = Sprint
+  } else {
+    this.Sprint = Sprint
+
+    if (this.$ == null) {
+      this.$ = Sprint
+    }
   }
-}());
+}.call(this));
