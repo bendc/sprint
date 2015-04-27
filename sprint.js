@@ -155,11 +155,8 @@ var Sprint;
     })
   }
 
-  var removeNaN = function(arr) {
-    for (var i = 0; i < arr.length; i++) {
-      if (arr[i] != arr[i]) arr[i] = 0
-    }
-    return arr
+  var nullNaN = function(val) {
+    return val == val? val : 0
   }
 
   var getSetDimension = function(obj, prop, value) {
@@ -171,12 +168,12 @@ var Sprint;
       var capitalizedProp = prop[0].toUpperCase() + prop.substring(1)
       // dimension of HTML document
       if (el == document) {
-        return Math.max.apply(this, removeNaN([
-          el.body["scroll" + capitalizedProp],
-          el.body["offset" + capitalizedProp],
-          root["scroll" + capitalizedProp],
-          root["offset" + capitalizedProp]
-        ]))
+        return Math.max(
+          nulNaN(el.body["scroll" + capitalizedProp]),
+          nulNaN(el.body["offset" + capitalizedProp]),
+          nulNaN(root["scroll" + capitalizedProp]),
+          nulNaN(root["offset" + capitalizedProp])
+        )
       }
       // dimension of viewport
       if (el == window) {
