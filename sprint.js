@@ -1140,12 +1140,12 @@ var Sprint;
       }
       // .on(events, handler)
       if (handler) {
-        if(selector){
-          handler = createDelegator(handler, selector);
-        }
         var eventsArr = events.trim().split(" ")
 
         return this.each(function() {
+          if(selector){
+            handler = createDelegator(handler, selector, this);
+          }
           if (!getEvents(this)) {
             this.sprintEventListeners = {}
           }
