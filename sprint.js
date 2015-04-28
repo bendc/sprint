@@ -155,10 +155,6 @@ var Sprint;
     })
   }
 
-  var nullNaN = function(val) {
-    return val == val? val : 0
-  }
-
   var getSetDimension = function(obj, prop, value) {
     // get
     if (value == null) {
@@ -169,10 +165,10 @@ var Sprint;
       // dimension of HTML document
       if (el == document) {
         return Math.max(
-          nulNaN(el.body["scroll" + capitalizedProp]),
-          nulNaN(el.body["offset" + capitalizedProp]),
-          nulNaN(root["scroll" + capitalizedProp]),
-          nulNaN(root["offset" + capitalizedProp])
+          el.body["scroll" + capitalizedProp] || 0,
+          el.body["offset" + capitalizedProp] || 0,
+          root["scroll" + capitalizedProp] || 0,
+          root["offset" + capitalizedProp] || 0
         )
       }
       // dimension of viewport
