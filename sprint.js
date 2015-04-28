@@ -52,9 +52,9 @@ var Sprint;
     }
   }());
 
-  var createDelegator = function(handler, selector){
+  var createDelegator = function(handler, selector, context){
     return function(e){
-      if (Sprint(e.target).is(selector)){
+      if (Sprint(e.target).closest(selector, context).size()){
         handler.apply(e.target, arguments);
       }
     }
