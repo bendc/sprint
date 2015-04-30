@@ -1137,6 +1137,7 @@ var Sprint;
     on: function(events, selector, handler) {
       if(typeof selector !== "string"){
         handler = selector;
+        selector = null;
       }
       // .on(events, handler)
       if (handler) {
