@@ -50,7 +50,15 @@ var Sprint;
       }
       return stringValue
     }
-  }())
+  }());
+
+  var createDelegator = function(handler, selector, context){
+    return function(e){
+      if (Sprint(e.target).closest(selector, context).size()){
+        handler.apply(e.target, arguments);
+      }
+    }
+  };
 
   var createDOM = function(HTMLString) {
     var tmp = document.createElement("div")
@@ -1126,12 +1134,19 @@ var Sprint;
       })
       return Sprint(dom)
     },
-    on: function(events, handler) {
+    on: function(events, selector, handler) {
+      if(typeof selector !== "string"){
+        handler = selector;
+        selector = null;
+      }
       // .on(events, handler)
       if (handler) {
         var eventsArr = events.trim().split(" ")
 
         return this.each(function() {
+          if(selector){
+            handler = createDelegator(handler, selector, this);
+          }
           if (!getEvents(this)) {
             this.sprintEventListeners = {}
           }
