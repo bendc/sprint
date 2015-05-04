@@ -1,0 +1,25 @@
+{
+  "name": "sprint",
+  "version": "1.0.0",
+  "description": "Sprint is a high-performance, 5KB (gzipped) DOM library for modern browsers. Sprint notably shines on bandwidth and resource constrained devices such as phones and tablets.",
+  "main": "",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bendc/sprint.git"
+  },
+  "author": "bendc <https://github.com/bendc>",
+  "license": "MIT License",
+  "bugs": {
+    "url": "https://github.com/Stephn-R/sprint/issues"
+  },
+  "homepage": "https://github.com/Stephn-R/sprint",
+  "devDependencies": {
+    "jasmine": "^2.3.1"
+  }
+}
