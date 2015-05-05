@@ -4,10 +4,10 @@
   "description": "Sprint is a high-performance, 5KB (gzipped) DOM library for modern browsers. Sprint notably shines on bandwidth and resource constrained devices such as phones and tablets.",
   "main": "",
   "directories": {
-    "test": "test"
+    "test": "__tests__"
   },
   "scripts": {
-    "test": "mocha"
+    "test": "jest"
   },
   "repository": {
     "type": "git",
@@ -20,6 +20,6 @@
   },
   "homepage": "https://github.com/Stephn-R/sprint",
   "devDependencies": {
-    "jasmine": "^2.3.1"
+    "jest-cli": "^0.4.1"
   }
 }

@@ -1405,3 +1405,5 @@ var Sprint;
     window.$ = Sprint
   }
 }());
+
+module.exports = $;
