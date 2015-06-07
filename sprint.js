@@ -1081,8 +1081,8 @@
         if (!el || el.nodeType > 1) return
         var pos = el.getBoundingClientRect()
         return {
-          top: pos.top,
-          left: pos.left
+          top: pos.top + window.pageYOffset,
+          left: pos.left + window.pageXOffset
         }
       }
       if (typeof coordinates == "object") {
