@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "description": "A tiny, lightning fast jQuery-like library for modern browsers.",
   "main": "sprint.js",
+  "scripts": {
+    "test": "jest"
+  },
   "repository": {
     "type": "git",
     "url": "git@github.com:philplckthun/sprint.git"
@@ -12,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/philplckthun/sprint/issues"
   },
-  "homepage": "https://github.com/philplckthun/sprint"
+  "homepage": "https://github.com/philplckthun/sprint",
+  "devDependencies": {
+    "jest-cli": "^0.4.8"
+  }
 }
