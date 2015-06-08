@@ -1,11 +1,27 @@
 # Sprint.js
 
+**This is a fork of Benjamin De Cock's original repository. Our goal is to push the development of Sprint further and merge back sometime in the future.**
+
 Sprint is a high-performance, 5KB (gzipped) DOM library for modern browsers. Sprint notably shines on bandwidth and resource constrained devices such as phones and tablets.
 
 Sprint has a familiar, jQuery-like chainable API:
 
 ```javascript
 $("div").addClass("new").append("<p>Hi Sprint</p>");
+```
+
+## Installation
+
+Download the [minified version](https://raw.githubusercontent.com/philplckthun/sprint/master/sprint.min.js) and include it in your page.
+
+```html
+<script src="sprint.min.js"></script>
+```
+
+Alternatively you can install Sprint via npm and import it, for example to use it with your existing build system.
+
+```
+npm install sprint-js
 ```
 
 ## Philosophy

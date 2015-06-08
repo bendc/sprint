@@ -7,8 +7,6 @@
  * http://sprintjs.com/license
  */
 
-var Sprint;
-
 (function() {
   "use strict";
 
@@ -159,13 +157,17 @@ var Sprint;
     // get
     if (value == null) {
       var el = obj.get(0)
-      if (!el || el.nodeType > 1) return
+      // return if el is neither element nor document node
+      if (!el || (el.nodeType > 1 && el.nodeType != 9)) return
       var capitalizedProp = prop[0].toUpperCase() + prop.substring(1)
       // dimension of HTML document
       if (el == document) {
-        var offset = root["offset" + capitalizedProp]
-        var inner = window["inner" + capitalizedProp]
-        return offset > inner ? offset : inner
+        return Math.max(
+          el.body["scroll" + capitalizedProp] || 0,
+          el.body["offset" + capitalizedProp] || 0,
+          root["scroll" + capitalizedProp] || 0,
+          root["offset" + capitalizedProp] || 0
+        )
       }
       // dimension of viewport
       if (el == window) {
@@ -1079,8 +1081,8 @@ var Sprint;
         if (!el || el.nodeType > 1) return
         var pos = el.getBoundingClientRect()
         return {
-          top: pos.top,
-          left: pos.left
+          top: pos.top + window.pageYOffset,
+          left: pos.left + window.pageXOffset
         }
       }
       if (typeof coordinates == "object") {
@@ -1397,11 +1399,21 @@ var Sprint;
 
   // public
 
-  Sprint = function(selector, context) {
+  var Sprint = function(selector, context) {
     return new Init(selector, context)
   }
 
-  if (window.$ == null) {
-    window.$ = Sprint
+  if (typeof define === "function" && define.amd) {
+    define(function() {
+      return Sprint
+    })
+  } else if (typeof module !== "undefined" && module.exports) {
+    module.exports = Sprint
+  } else {
+    this.Sprint = Sprint
+
+    if (this.$ == null) {
+      this.$ = Sprint
+    }
   }
-}());
+}.call(this));
