@@ -149,7 +149,7 @@ The methods supported by Sprint are, for the most part, identical to jQuery's. T
 * [size](http://api.jquery.com/size/)
 * [slice](http://api.jquery.com/slice/)
 * [text](http://api.jquery.com/text/)
-* [toggleClass](http://api.jquery.com/toggleClass/) - _no support for .toggleClass([switch])_
+* [toggleClass](http://api.jquery.com/toggleClass/)
 * [trigger](http://api.jquery.com/trigger/) - _no support for Event object and extraParameters_
 * [unwrap](http://api.jquery.com/unwrap/)
 * [val](http://api.jquery.com/val/)
