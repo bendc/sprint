@@ -797,7 +797,8 @@ var Sprint;
       var len = this.length
       for (var i = 0; i < len; i++) {
         var node = dom[i]
-        callback.call(node, i, node)
+        var shouldStop = callback.call(node, i, node) === false;
+        if (shouldStop) break;
       }
       return this
     },
